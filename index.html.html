@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador Universal de Plano Bimestral — SEDUC-SP 2027</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- PDF.js para leitura local de Guias do Currículo Priorizado -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- ExcelJS para geração fiel de .xlsx com estilos, fórmulas e listas suspensas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F3F4F8;
+      color: #1F2433;
+    }
+    /* Custom scrollbar para a grade larga */
+    .table-scroll::-webkit-scrollbar {
+      height: 10px;
+      width: 8px;
+    }
+    .table-scroll::-webkit-scrollbar-track {
+      background: #E2E8F0;
+      border-radius: 9999px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb {
+      background: #94A3B8;
+      border-radius: 9999px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb:hover {
+      background: #64748B;
+    }
+    .cell-textarea {
+      resize: vertical;
+      min-height: 58px;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- BARRA SUPERIOR OFICIAL (#293252) -->
+  <header class="bg-[#293252] text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-[#57C2A2] text-[#1F2433] font-extrabold flex items-center justify-center text-lg shadow-sm shrink-0">
+          SP
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight">Gerador Universal de Plano Bimestral</h1>
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#57C2A2]/20 text-[#57C2A2] border border-[#57C2A2]/40">
+              SEDUC-SP • Currículo Priorizado 2027
+            </span>
+          </div>
+          <p class="text-xs text-slate-300">Extração inteligente de PDF (EF &amp; EM) • Cruzamento SAEB/SARESP/ENEM • Exportação fiel ao Modelo Funcional 2027.xlsx</p>
+        </div>
+      </div>
+
+      <!-- Ações Rápidas -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="openPromptModal()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/15 cursor-pointer">
+          <svg class="w-4 h-4 text-[#FCC553]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span>Prompt Universal</span>
+        </button>
+        <button type="button" onclick="loadSample6Ano()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/15 cursor-pointer">
+          <svg class="w-4 h-4 text-[#57C2A2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+          <span>Exemplo 6º Ano (Mat)</span>
+        </button>
+        <button type="button" onclick="loadSampleEM()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/15 cursor-pointer">
+          <svg class="w-4 h-4 text-[#FCC553]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          <span>Exemplo 1ª Série (EM)</span>
+        </button>
+        <button type="button" onclick="openResetModal()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 text-xs font-semibold flex items-center gap-1.5 transition border border-rose-400/30 cursor-pointer" title="Limpar tudo e iniciar um novo plano">
+          <svg class="w-4 h-4 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <span>Novo Plano</span>
+        </button>
+        <button type="button" onclick="exportToExcel()" class="px-4 py-2 rounded-xl bg-[#57C2A2] hover:bg-[#46b090] text-[#1F2433] text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          <span>Baixar Planilha (.xlsx)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOAST DE NOTIFICAÇÃO -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+    <!-- PAINEL SUPERIOR: IMPORTAÇÃO DO PDF + METADADOS DO PLANO -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+      <!-- CARD 1: IMPORTAR PDF DO GUIA PRIORIZADO (5 colunas) -->
+      <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-[#293252] text-white text-xs font-bold flex items-center justify-center">1</span>
+              <h2 class="text-sm font-bold text-[#293252]">Importar Guia do Currículo Priorizado (PDF)</h2>
+            </div>
+            <button type="button" onclick="togglePasteMode()" class="text-xs font-semibold text-[#293252] hover:underline flex items-center gap-1 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              <span>Colar texto</span>
+            </button>
+          </div>
+
+          <!-- Dropzone -->
+          <div id="pdf-dropzone" class="border-2 border-dashed border-slate-300 hover:border-[#57C2A2] bg-slate-50/70 hover:bg-[#DEF3EC]/30 rounded-xl p-4 text-center transition relative">
+            <input type="file" id="pdf-file-input" accept=".pdf,application/pdf" class="sr-only" onclick="this.value=''" onchange="handlePdfUpload(event)">
+            <div id="pdf-empty-state" class="space-y-2 py-2">
+              <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              <p class="text-sm font-semibold text-slate-700">Arraste o PDF do Guia Priorizado aqui ou selecione o arquivo</p>
+              <div class="pt-0.5">
+                <label for="pdf-file-input" class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#293252] hover:bg-[#364168] text-white text-xs font-semibold rounded-lg shadow-xs cursor-pointer transition">
+                  <svg class="w-3.5 h-3.5 text-[#57C2A2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                  <span>Selecionar PDF</span>
+                </label>
+              </div>
+              <p class="text-[11px] text-slate-500">Suporta Guias do Ensino Fundamental (Anos Iniciais/Finais) e Ensino Médio (1ª a 3ª séries)</p>
+            </div>
+            <div id="pdf-loaded-state" class="hidden text-left">
+              <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200 shadow-xs gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs shrink-0">PDF</div>
+                  <div class="truncate">
+                    <p id="pdf-filename" class="text-xs font-bold text-slate-800 truncate">documento.pdf</p>
+                    <p id="pdf-pagecount" class="text-[11px] text-slate-500">0 páginas carregadas</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span id="pdf-detected-badge" class="hidden px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#DEF3EC] text-teal-900 border border-[#57C2A2]/40"></span>
+                  <label for="pdf-file-input" class="text-xs text-[#293252] hover:bg-slate-100 px-2 py-1 rounded-md font-semibold cursor-pointer">Trocar</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Área alternativa de colar texto -->
+          <div id="paste-box" class="hidden mt-3">
+            <textarea id="manual-paste-text" rows="3" placeholder="Cole aqui o trecho do Escopo-Sequência e do Farol da Prova Paulista caso prefira não usar PDF..." class="w-full text-xs border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-[#57C2A2] focus:border-[#57C2A2] outline-none"></textarea>
+          </div>
+
+          <!-- Parâmetros de Extração -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ano / Série Alvo</label>
+              <select id="extract-grade" onchange="handleGradeFilterChange()" class="w-full text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white focus:ring-2 focus:ring-[#57C2A2] outline-none">
+                <optgroup label="Ensino Fundamental - Anos Iniciais">
+                  <option value="1º Ano">1º Ano (EF)</option>
+                  <option value="2º Ano">2º Ano (EF)</option>
+                  <option value="3º Ano">3º Ano (EF)</option>
+                  <option value="4º Ano">4º Ano (EF)</option>
+                  <option value="5º Ano">5º Ano (EF)</option>
+                </optgroup>
+                <optgroup label="Ensino Fundamental - Anos Finais">
+                  <option value="6º Ano" selected>6º Ano (EF)</option>
+                  <option value="7º Ano">7º Ano (EF)</option>
+                  <option value="8º Ano">8º Ano (EF)</option>
+                  <option value="9º Ano">9º Ano (EF)</option>
+                </optgroup>
+                <optgroup label="Ensino Médio">
+                  <option value="1ª Série">1ª Série (EM)</option>
+                  <option value="2ª Série">2ª Série (EM)</option>
+                  <option value="3ª Série">3ª Série (EM)</option>
+                </optgroup>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Bimestre Alvo</label>
+              <select id="extract-bimestre" onchange="syncBimestreSelect(this.value)" class="w-full text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white focus:ring-2 focus:ring-[#57C2A2] outline-none">
+                <option value="1º Bimestre" selected>1º Bimestre</option>
+                <option value="2º Bimestre">2º Bimestre</option>
+                <option value="3º Bimestre">3º Bimestre</option>
+                <option value="4º Bimestre">4º Bimestre</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pág. Inicial (opc.)</label>
+              <input type="number" id="extract-start-page" min="1" placeholder="Auto" class="w-full text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#57C2A2] outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pág. Final (opc.)</label>
+              <input type="number" id="extract-end-page" min="1" placeholder="Auto" class="w-full text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#57C2A2] outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Botão Extrair com IA -->
+        <div class="mt-4">
+          <button type="button" id="btn-extract-ai" onclick="extractAndCrossData()" class="w-full py-2.5 px-4 rounded-xl bg-[#293252] hover:bg-[#1e253d] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition cursor-pointer">
+            <svg class="w-4 h-4 text-[#FCC553]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span>Extrair e Cruzar Dados com IA (Gemini)</span>
+          </button>
+          <div id="extract-progress" class="hidden mt-2">
+            <div class="flex items-center justify-between text-[11px] text-slate-600 mb-1">
+              <span id="extract-status-text">Lendo páginas do PDF...</span>
+              <span id="extract-percent">0%</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+              <div id="extract-bar" class="bg-[#57C2A2] h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: CABEÇALHO DO PLANO BIMESTRAL (7 colunas) -->
+      <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-[#293252] text-white text-xs font-bold flex items-center justify-center">2</span>
+              <div>
+                <h2 id="header-preview-title" class="text-sm font-bold text-[#293252]">PLANO BIMESTRAL - 1º BIMESTRE</h2>
+                <p class="text-[11px] text-slate-500">Metadados oficiais das linhas 1 a 3 do arquivo Excel</p>
+              </div>
+            </div>
+            <span id="sheet-tab-preview" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#F3F4F8] text-[#293252] border border-slate-200">
+              Aba: <strong>Plano Bimestral - 1º Bimestre</strong>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Professor(a)</label>
+              <input type="text" id="meta-professor" placeholder="Ex: Prof.ª Ana Paula Silva" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#293252] outline-none">
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-semibold text-slate-700">Componente Curricular</label>
+                <span id="comp-auto-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#DEF3EC] text-teal-900 border border-[#57C2A2]/40">✓ Detectado do PDF</span>
+              </div>
+              <input type="text" id="meta-componente" value="Matemática" oninput="document.getElementById('comp-auto-badge').classList.add('hidden')" placeholder="Ex: Língua Portuguesa, Matemática..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#293252] outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Etapa de Ensino</label>
+              <select id="meta-etapa" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:ring-2 focus:ring-[#293252] outline-none">
+                <option value="Ensino Fundamental - Anos Iniciais">Ensino Fundamental - Anos Iniciais</option>
+                <option value="Ensino Fundamental - Anos Finais" selected>Ensino Fundamental - Anos Finais</option>
+                <option value="Ensino Médio">Ensino Médio</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Série / Ano / Turma</label>
+              <input type="text" id="meta-turma" value="6º Ano A" placeholder="Ex: 6º Ano A ou 1ª Série B" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#293252] outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Bimestre</label>
+              <select id="meta-bimestre" onchange="updateHeaderMetadata()" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:ring-2 focus:ring-[#293252] outline-none">
+                <option value="1º bimestre" selected>1º bimestre</option>
+                <option value="2º bimestre">2º bimestre</option>
+                <option value="3º bimestre">3º bimestre</option>
+                <option value="4º bimestre">4º bimestre</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Total de aulas</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="meta-total-aulas" value="0" min="0" class="w-full text-sm font-bold text-[#293252] border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#293252] outline-none">
+                <button type="button" onclick="syncTotalAulas()" title="Sincronizar com linhas preenchidas" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Resumo Diagnóstico & Ação Pedagógica Automática -->
+        <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-3 text-xs">
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+              Prioridade 1: <strong id="stat-p1" class="text-slate-900">0</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              Prioridade 2: <strong id="stat-p2" class="text-slate-900">0</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              Prioridade 3: <strong id="stat-p3" class="text-slate-900">0</strong>
+            </span>
+          </div>
+
+          <button type="button" onclick="autoSuggestPedagogicalDecisions()" class="px-3 py-1.5 rounded-xl bg-[#FFFEE7DB] hover:bg-[#FB8854]/25 text-[#9a3412] border border-[#FB8854]/50 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+            <span>Sugerir Decisões Pedagógicas (Colunas 11 e 12)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- GRADE INTERATIVA ESPELHO DA PLANILHA OFICIAL -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+      <div class="p-4 sm:px-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-[#293252] text-white text-xs font-bold flex items-center justify-center">3</span>
+          <div>
+            <h2 class="text-sm font-bold text-[#293252]">Grade de Planejamento Bimestral (Espelho Modelo Funcional 2027)</h2>
+            <p class="text-[11px] text-slate-500">Edite qualquer célula diretamente. A coluna <strong>1. Semana</strong> calcula automaticamente ao preencher a data.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="addLessonRow()" class="px-3 py-1.5 rounded-xl bg-[#293252] hover:bg-[#1e253d] text-white text-xs font-semibold flex items-center gap-1 transition cursor-pointer">
+            <span>+ Adicionar Aula</span>
+          </button>
+          <button type="button" onclick="clearAllRows()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition cursor-pointer">
+            Limpar Tabela
+          </button>
+        </div>
+      </div>
+
+      <!-- Container da Tabela com Rolagem Horizontal -->
+      <div class="overflow-x-auto table-scroll">
+        <table class="w-full border-collapse text-xs min-w-[1680px]">
+          <thead>
+            <!-- Linha 5 da Planilha: 3 Blocos Temáticos -->
+            <tr class="text-[#1F2433] font-bold text-center text-[13px]">
+              <th colspan="7" class="bg-[#57C2A2] py-2.5 px-3 border border-slate-300">
+                GUIA DO CURRÍCULO PRIORIZADO
+              </th>
+              <th colspan="3" class="bg-[#FCC553] py-2.5 px-3 border border-slate-300">
+                PAINEL DE DIAGNÓSTICO
+              </th>
+              <th colspan="3" class="bg-[#FB8854] py-2.5 px-3 border border-slate-300">
+                DECISÃO PEDAGÓGICA
+              </th>
+            </tr>
+            <!-- Linha 6 da Planilha: Subcabeçalhos -->
+            <tr class="text-[#1F2433] font-bold text-center">
+              <th class="bg-[#DEF3EC] py-2.5 px-2 border border-slate-300 w-[115px]">1. Semana</th>
+              <th class="bg-[#DEF3EC] py-2.5 px-2 border border-slate-300 w-[130px]">2. Dia</th>
+              <th class="bg-[#DEF3EC] py-2.5 px-2 border border-slate-300 w-[195px]">3. Aula</th>
+              <th class="bg-[#DEF3EC] py-2.5 px-2 border border-slate-300 w-[250px]">4. Aprendizagem essencial</th>
+              <th class="bg-[#DEF3EC] py-2.5 px-2 border border-slate-300 w-[260px]">5. Objetivo da aula</th>
+              <th class="bg-[#DEF3EC] py-2.5 px-2 border border-slate-300 w-[210px]">6. Conteúdo da Prova Paulista</th>
+              <th class="bg-[#DEF3EC] py-2.5 px-2 border border-slate-300 w-[180px]">7. Habilidade SAEB/ENEM</th>
+              <th class="bg-[#FEF3D6] py-2.5 px-2 border border-slate-300 w-[145px]">1. Prioridade no mapa</th>
+              <th class="bg-[#FEF3D6] py-2.5 px-2 border border-slate-300 w-[135px]">2. Criticidade da turma</th>
+              <th class="bg-[#FEF3D6] py-2.5 px-2 border border-slate-300 w-[110px]">3. % de acerto da turma</th>
+              <th class="bg-[#FEE7DB] py-2.5 px-2 border border-slate-300 w-[185px]">1. Manter, adaptar/ampliar ou reorganizar</th>
+              <th class="bg-[#FEE7DB] py-2.5 px-2 border border-slate-300 w-[270px]">2. O que será feito nesta aula?</th>
+              <th class="bg-[#FEE7DB] py-2.5 px-2 border border-slate-300 w-[46px]">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="lessons-tbody" class="divide-y divide-slate-200 bg-white">
+            <!-- Linhas geradas dinamicamente via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Linha 40 da Planilha: Instrumentos avaliativos do bimestre -->
+      <div class="p-4 sm:px-5 bg-[#F8FAFC] border-t border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <div class="md:col-span-3 bg-[#293252] text-white font-bold text-xs px-4 py-3 rounded-xl text-center">
+          Instrumentos avaliativos do bimestre
+        </div>
+        <div class="md:col-span-9">
+          <textarea id="meta-instrumentos" rows="2" placeholder="Descreva os instrumentos avaliativos do bimestre (ex.: Prova Paulista, Avaliação Diagnóstica, Listas de Exercícios, Trabalhos em Grupo, Participação)..." class="w-full text-xs border border-slate-300 rounded-xl p-2.5 bg-white focus:ring-2 focus:ring-[#293252] outline-none">Prova Paulista Bimestral; Avaliação Processual em Sala; Atividades de Recomposição das Aprendizagens Essenciais; Participação e Registros no Caderno.</textarea>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CONFIRMAR NOVO PLANO / REINICIAR -->
+  <div id="reset-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="bg-[#293252] text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <h3 class="text-sm font-bold">Iniciar Novo Plano Bimestral?</h3>
+        </div>
+        <button type="button" onclick="closeResetModal()" class="text-slate-300 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Esta ação irá limpar o <strong>PDF importado</strong>, os <strong>filtros de página</strong>, os <strong>dados do cabeçalho</strong> e todas as <strong>aulas da grade</strong> para começar um planejamento do zero.
+        </p>
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" onclick="closeResetModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer">
+            Cancelar
+          </button>
+          <button type="button" onclick="confirmResetApp()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition cursor-pointer">
+            Sim, Reiniciar Tudo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PROMPT GERADOR UNIVERSAL -->
+  <div id="prompt-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="bg-[#293252] text-white px-5 py-4 flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-bold">Prompt Gerador Universal — Currículo Priorizado SEDUC-SP</h3>
+          <p class="text-[11px] text-slate-300">Compatível com qualquer componente e etapa (Ensino Fundamental ou Ensino Médio)</p>
+        </div>
+        <button type="button" onclick="closePromptModal()" class="text-slate-300 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
+      </div>
+      <div class="p-5 space-y-3">
+        <p class="text-xs text-slate-600">
+          Use este prompt estruturado sempre que quiser instruir uma IA a ler um PDF do <strong>Guia do Currículo Priorizado</strong> e preencher o <strong>Modelo Funcional 2027.xlsx</strong>:
+        </p>
+        <textarea id="universal-prompt-text" readonly rows="13" class="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-800 leading-relaxed focus:outline-none">Atue como especialista em planejamento pedagógico da SEDUC-SP. Leia o PDF anexado (Guia do Currículo Priorizado) e preencha a planilha Excel seguindo rigorosamente a estrutura do arquivo "Modelo Funcional 2027.xlsx" para o [INSIRA ANO/SÉRIE] e [INSIRA BIMESTRE].
+
+Regras de extração e cruzamento de dados:
+1. Aba e Cabeçalho: Nomeie a aba como "Plano Bimestral - [X]º Bimestre" e preencha Professor(a), Componente, Série/Ano/Turma, Bimestre e Total de aulas conforme o Escopo-Sequência do PDF.
+2. Coluna C (3. Aula): Extraia o número e o título exato de cada aula do Escopo-Sequência.
+3. Coluna D (4. Aprendizagem essencial): Extraia o código (AE1, AE2...) e a descrição completa da Aprendizagem Essencial correspondente à aula.
+4. Coluna E (5. Objetivo da aula): Extraia os objetivos de aprendizagem listados para aquela aula no Escopo-Sequência.
+5. Coluna F (6. Conteúdo da Prova Paulista): Cruze o conteúdo da aula com os "Conteúdos Avaliados" no "Farol da Prova Paulista" (destacando o tópico avaliado).
+6. Coluna G (7. Habilidade SAEB/ENEM): Informe o descritor correspondente do SAEB/SARESP ou competência/habilidade do ENEM (extraído da seção "De olho no SAEB e SARESP" / "De olho no ENEM e Provão Paulista" / "Farol da Prova Paulista") acompanhado do código da habilidade do Currículo Paulista.
+7. Coluna H (1. Prioridade no mapa): Classifique automaticamente como "Prioridade 1", "Prioridade 2", "Prioridade 3" ou "Não identificada" consultando a matriz de Habilidades Prioritárias no PDF.
+8. Preserve intactas as fórmulas da Coluna A (Semana), as validações de dados (listas suspensas) das colunas H, I e K, e a linha final de "Instrumentos avaliativos do bimestre".</textarea>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="copyUniversalPrompt()" class="px-4 py-2 rounded-xl bg-[#57C2A2] hover:bg-[#46b090] text-[#1F2433] text-xs font-bold transition cursor-pointer">
+            Copiar Prompt
+          </button>
+          <button type="button" onclick="closePromptModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CONFIGURAÇÃO INICIAL & ESTADO GLOBAL
+    // =========================================================================
+    const PDFJS_WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
+    }
+
+    let loadedPdfDoc = null;
+    let loadedPdfName = '';
+    let cachedPdfPages = []; // Cache indexado de todas as páginas do PDF carregado
+    let detectedGuideMeta = { componente: '', etapa: '', label: '', gradeOption: null, areaComponents: [] };
+
+    // Estrutura de dados das aulas (espelhando as 12 colunas da planilha)
+    let lessonsData = [];
+
+    // =========================================================================
+    // 2. UTILITÁRIOS DE UI & NOTIFICAÇÕES
+    // =========================================================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-[#293252] text-white border-l-4 border-[#57C2A2]',
+        error: 'bg-rose-900 text-white border-l-4 border-rose-400',
+        warning: 'bg-amber-900 text-white border-l-4 border-[#FCC553]',
+        info: 'bg-slate-800 text-white border-l-4 border-sky-400'
+      };
+      toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-lg text-xs font-medium pointer-events-auto transition-all duration-300`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 4500);
+    }
+
+    function setProgress(visible, text = '', percent = 0) {
+      const box = document.getElementById('extract-progress');
+      if (!box) return;
+      if (!visible) {
+        box.classList.add('hidden');
+        return;
+      }
+      box.classList.remove('hidden');
+      document.getElementById('extract-status-text').textContent = text;
+      document.getElementById('extract-percent').textContent = `${Math.round(percent)}%`;
+      document.getElementById('extract-bar').style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    }
+
+    function openPromptModal() {
+      document.getElementById('prompt-modal').classList.remove('hidden');
+    }
+
+    function closePromptModal() {
+      document.getElementById('prompt-modal').classList.add('hidden');
+    }
+
+    function openResetModal() {
+      document.getElementById('reset-modal').classList.remove('hidden');
+    }
+
+    function closeResetModal() {
+      document.getElementById('reset-modal').classList.add('hidden');
+    }
+
+    function confirmResetApp() {
+      closeResetModal();
+
+      // 1. Limpa estado e interface do PDF / texto colado
+      loadedPdfDoc = null;
+      loadedPdfName = '';
+      cachedPdfPages = [];
+      detectedGuideMeta = { componente: '', etapa: '', label: '', gradeOption: null, areaComponents: [] };
+
+      const fileInput = document.getElementById('pdf-file-input');
+      if (fileInput) fileInput.value = '';
+      document.getElementById('pdf-loaded-state').classList.add('hidden');
+      document.getElementById('pdf-empty-state').classList.remove('hidden');
+      const pdfBadge = document.getElementById('pdf-detected-badge');
+      if (pdfBadge) {
+        pdfBadge.textContent = '';
+        pdfBadge.classList.add('hidden');
+      }
+
+      const pasteArea = document.getElementById('manual-paste-text');
+      if (pasteArea) pasteArea.value = '';
+      document.getElementById('paste-box').classList.add('hidden');
+      setProgress(false);
+
+      // 2. Reseta filtros de extração
+      document.getElementById('extract-grade').value = '6º Ano';
+      document.getElementById('extract-bimestre').value = '1º Bimestre';
+      document.getElementById('extract-start-page').value = '';
+      document.getElementById('extract-end-page').value = '';
+
+      // 3. Reseta cabeçalho (Card 2) e instrumentos avaliativos
+      document.getElementById('meta-professor').value = '';
+      document.getElementById('meta-componente').value = '';
+      document.getElementById('comp-auto-badge').classList.add('hidden');
+      document.getElementById('meta-etapa').value = 'Ensino Fundamental - Anos Finais';
+      document.getElementById('meta-turma').value = '';
+      document.getElementById('meta-bimestre').value = '1º bimestre';
+      document.getElementById('meta-instrumentos').value = 'Prova Paulista Bimestral; Avaliação Processual em Sala; Atividades de Recomposição das Aprendizagens Essenciais; Participação e Registros no Caderno.';
+      updateHeaderMetadata();
+
+      // 4. Reinicia grade com 1 linha em branco
+      lessonsData = [];
+      addLessonRow();
+
+      showToast('Aplicativo reiniciado! Pronto para iniciar um novo plano bimestral.', 'success');
+    }
+
+    function copyUniversalPrompt() {
+      const textarea = document.getElementById('universal-prompt-text');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        showToast('Prompt Universal copiado para a área de transferência!', 'success');
+      } catch (e) {
+        showToast('Não foi possível copiar automaticamente. Selecione o texto e pressione Ctrl+C.', 'warning');
+      }
+    }
+
+    function togglePasteMode() {
+      const box = document.getElementById('paste-box');
+      box.classList.toggle('hidden');
+    }
+
+    // =========================================================================
+    // 3. SINCRONIZAÇÃO DE CABEÇALHO E CÁLCULO DE SEMANA (COLUNA A)
+    // =========================================================================
+    function syncBimestreSelect(val) {
+      const lowerVal = val.toLowerCase();
+      document.getElementById('meta-bimestre').value = lowerVal;
+      updateHeaderMetadata();
+    }
+
+    function updateHeaderMetadata() {
+      const bimestre = document.getElementById('meta-bimestre').value; // ex: "1º bimestre"
+      const upperTitle = `PLANO BIMESTRAL - ${bimestre.toUpperCase()}`;
+      const tabTitle = `Plano Bimestral - ${bimestre.replace('bimestre', 'Bimestre')}`;
+      document.getElementById('header-preview-title').textContent = upperTitle;
+      document.getElementById('sheet-tab-preview').innerHTML = `Aba: <strong>${tabTitle}</strong>`;
+    }
+
+    function handleGradeFilterChange() {
+      const grade = document.getElementById('extract-grade').value;
+      const isEM = grade.includes('Série');
+      const isAI = ['1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano'].includes(grade);
+      document.getElementById('meta-etapa').value = isEM
+        ? 'Ensino Médio'
+        : (isAI ? 'Ensino Fundamental - Anos Iniciais' : 'Ensino Fundamental - Anos Finais');
+      document.getElementById('meta-turma').value = `${grade} A`;
+    }
+
+    function syncTotalAulas() {
+      document.getElementById('meta-total-aulas').value = lessonsData.length;
+      showToast(`Total de aulas atualizado para ${lessonsData.length}.`, 'info');
+    }
+
+    // Espelha exatamente a fórmula do Excel: =IF(B7="","",TEXT(B7-WEEKDAY(B7,2)+1,"dd/mm")&" a "&TEXT(B7-WEEKDAY(B7,2)+7,"dd/mm"))
+    function computeWeekRange(isoDateStr) {
+      if (!isoDateStr) return '';
+      const parts = isoDateStr.split('-');
+      if (parts.length !== 3) return '';
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      if (isNaN(d.getTime())) return '';
+      // WEEKDAY(d, 2): Segunda = 1 ... Domingo = 7
+      const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay();
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - dayOfWeek + 1);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      const fmt = (dt) => String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0');
+      return `${fmt(monday)} a ${fmt(sunday)}`;
+    }
+
+    function updateStats() {
+      let p1 = 0, p2 = 0, p3 = 0;
+      lessonsData.forEach(row => {
+        if (row.prioridade === 'Prioridade 1') p1++;
+        else if (row.prioridade === 'Prioridade 2') p2++;
+        else if (row.prioridade === 'Prioridade 3') p3++;
+      });
+      document.getElementById('stat-p1').textContent = p1;
+      document.getElementById('stat-p2').textContent = p2;
+      document.getElementById('stat-p3').textContent = p3;
+      document.getElementById('meta-total-aulas').value = lessonsData.length;
+    }
+
+    // =========================================================================
+    // 4. RENDERIZAÇÃO E EDIÇÃO DA GRADE DE 12 COLUNAS
+    // =========================================================================
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function getPriorityBadgeClass(val) {
+      if (val === 'Prioridade 1') return 'bg-rose-100 text-rose-800 border-rose-300 font-bold';
+      if (val === 'Prioridade 2') return 'bg-amber-100 text-amber-800 border-amber-300 font-semibold';
+      if (val === 'Prioridade 3') return 'bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold';
+      return 'bg-slate-100 text-slate-600 border-slate-300';
+    }
+
+    function getCriticalityBadgeClass(val) {
+      if (val === 'Crítica') return 'bg-rose-100 text-rose-800 border-rose-300 font-bold';
+      if (val === 'Em atenção') return 'bg-amber-100 text-amber-800 border-amber-300 font-semibold';
+      if (val === 'Dominada') return 'bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold';
+      return 'bg-slate-100 text-slate-600 border-slate-300';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('lessons-tbody');
+      if (lessonsData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="13" class="py-12 text-center text-slate-500">
+              <p class="text-sm font-semibold text-slate-700 mb-1">Nenhuma aula carregada na grade ainda</p>
+              <p class="text-xs">Importe o PDF do Guia do Currículo Priorizado acima ou clique em <strong>"Exemplo 6º Ano (Mat)"</strong> / <strong>"Exemplo 1ª Série (EM)"</strong>.</p>
+            </td>
+          </tr>
+        `;
+        updateStats();
+        return;
+      }
+
+      tbody.innerHTML = lessonsData.map((row, idx) => {
+        const weekText = computeWeekRange(row.dia);
+        return `
+          <tr class="hover:bg-slate-50/90 align-top transition">
+            <!-- Col A: 1. Semana (Fórmula automática) -->
+            <td class="p-1.5 border border-slate-200 bg-[#F6F7FA] text-center align-middle font-medium text-[#5B6275] select-none">
+              ${weekText || '<span class="text-[10px] text-slate-400 italic">Auto (data)</span>'}
+            </td>
+            <!-- Col B: 2. Dia -->
+            <td class="p-1.5 border border-slate-200 align-middle">
+              <input type="date" value="${escapeHtml(row.dia)}" onchange="updateCell(${idx}, 'dia', this.value)"
+                class="w-full text-xs border border-slate-200 rounded-lg px-1.5 py-1.5 focus:ring-2 focus:ring-[#57C2A2] outline-none bg-white">
+            </td>
+            <!-- Col C: 3. Aula -->
+            <td class="p-1.5 border border-slate-200">
+              <textarea onchange="updateCell(${idx}, 'aula', this.value)" class="w-full text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg p-1.5 cell-textarea focus:ring-2 focus:ring-[#57C2A2] outline-none">${escapeHtml(row.aula)}</textarea>
+            </td>
+            <!-- Col D: 4. Aprendizagem essencial -->
+            <td class="p-1.5 border border-slate-200">
+              <textarea onchange="updateCell(${idx}, 'ae', this.value)" class="w-full text-xs text-slate-700 border border-slate-200 rounded-lg p-1.5 cell-textarea focus:ring-2 focus:ring-[#57C2A2] outline-none">${escapeHtml(row.ae)}</textarea>
+            </td>
+            <!-- Col E: 5. Objetivo da aula -->
+            <td class="p-1.5 border border-slate-200">
+              <textarea onchange="updateCell(${idx}, 'objetivo', this.value)" class="w-full text-xs text-slate-700 border border-slate-200 rounded-lg p-1.5 cell-textarea focus:ring-2 focus:ring-[#57C2A2] outline-none">${escapeHtml(row.objetivo)}</textarea>
+            </td>
+            <!-- Col F: 6. Conteúdo da Prova Paulista -->
+            <td class="p-1.5 border border-slate-200">
+              <textarea onchange="updateCell(${idx}, 'conteudo', this.value)" class="w-full text-xs text-slate-700 border border-slate-200 rounded-lg p-1.5 cell-textarea focus:ring-2 focus:ring-[#57C2A2] outline-none">${escapeHtml(row.conteudo)}</textarea>
+            </td>
+            <!-- Col G: 7. Habilidade SAEB/ENEM -->
+            <td class="p-1.5 border border-slate-200">
+              <textarea onchange="updateCell(${idx}, 'habilidade', this.value)" class="w-full text-xs font-medium text-[#293252] border border-slate-200 rounded-lg p-1.5 cell-textarea focus:ring-2 focus:ring-[#57C2A2] outline-none">${escapeHtml(row.habilidade)}</textarea>
+            </td>
+            <!-- Col H: 1. Prioridade no mapa -->
+            <td class="p-1.5 border border-slate-200 align-middle">
+              <select onchange="updateCell(${idx}, 'prioridade', this.value)" class="w-full text-xs border rounded-lg px-2 py-1.5 outline-none ${getPriorityBadgeClass(row.prioridade)}">
+                <option value="Prioridade 1" ${row.prioridade === 'Prioridade 1' ? 'selected' : ''}>Prioridade 1</option>
+                <option value="Prioridade 2" ${row.prioridade === 'Prioridade 2' ? 'selected' : ''}>Prioridade 2</option>
+                <option value="Prioridade 3" ${row.prioridade === 'Prioridade 3' ? 'selected' : ''}>Prioridade 3</option>
+                <option value="Não identificada" ${row.prioridade === 'Não identificada' ? 'selected' : ''}>Não identificada</option>
+              </select>
+            </td>
+            <!-- Col I: 2. Criticidade da turma -->
+            <td class="p-1.5 border border-slate-200 align-middle">
+              <select onchange="updateCell(${idx}, 'criticidade', this.value)" class="w-full text-xs border rounded-lg px-2 py-1.5 outline-none ${getCriticalityBadgeClass(row.criticidade)}">
+                <option value="Sem dados" ${row.criticidade === 'Sem dados' ? 'selected' : ''}>Sem dados</option>
+                <option value="Crítica" ${row.criticidade === 'Crítica' ? 'selected' : ''}>Crítica</option>
+                <option value="Em atenção" ${row.criticidade === 'Em atenção' ? 'selected' : ''}>Em atenção</option>
+                <option value="Dominada" ${row.criticidade === 'Dominada' ? 'selected' : ''}>Dominada</option>
+              </select>
+            </td>
+            <!-- Col J: 3. % de acerto da turma -->
+            <td class="p-1.5 border border-slate-200 align-middle">
+              <div class="relative">
+                <input type="number" min="0" max="100" step="1" placeholder="—" value="${row.acerto !== '' && row.acerto !== null ? escapeHtml(row.acerto) : ''}"
+                  onchange="updateCell(${idx}, 'acerto', this.value)"
+                  class="w-full text-xs text-center font-semibold border border-slate-200 rounded-lg pl-2 pr-5 py-1.5 focus:ring-2 focus:ring-[#FCC553] outline-none">
+                <span class="absolute right-2 top-1.5 text-slate-400 text-[11px]">%</span>
+              </div>
+            </td>
+            <!-- Col K: 1. Manter, adaptar/ampliar ou reorganizar -->
+            <td class="p-1.5 border border-slate-200 align-middle">
+              <select onchange="updateCell(${idx}, 'decisao', this.value)" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white font-medium text-slate-800 focus:ring-2 focus:ring-[#FB8854] outline-none">
+                <option value="Manter" ${row.decisao === 'Manter' ? 'selected' : ''}>Manter</option>
+                <option value="Adaptar e ampliar" ${row.decisao === 'Adaptar e ampliar' ? 'selected' : ''}>Adaptar e ampliar</option>
+                <option value="Reorganizar e ampliar" ${row.decisao === 'Reorganizar e ampliar' ? 'selected' : ''}>Reorganizar e ampliar</option>
+              </select>
+            </td>
+            <!-- Col L: 2. O que será feito nesta aula? -->
+            <td class="p-1.5 border border-slate-200">
+              <textarea onchange="updateCell(${idx}, 'acao', this.value)" placeholder="Descreva a estratégia didática..." class="w-full text-xs text-slate-700 border border-slate-200 rounded-lg p-1.5 cell-textarea focus:ring-2 focus:ring-[#FB8854] outline-none">${escapeHtml(row.acao)}</textarea>
+            </td>
+            <!-- Excluir linha -->
+            <td class="p-1.5 border border-slate-200 text-center align-middle">
+              <button type="button" onclick="removeLessonRow(${idx})" title="Remover linha" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateStats();
+    }
+
+    function updateCell(index, field, value) {
+      if (!lessonsData[index]) return;
+      lessonsData[index][field] = value;
+
+      // Classifica criticidade automaticamente ao digitar % de acerto
+      if (field === 'acerto' && value !== '') {
+        const pct = Number(value);
+        if (!isNaN(pct)) {
+          if (pct < 40) lessonsData[index].criticidade = 'Crítica';
+          else if (pct < 70) lessonsData[index].criticidade = 'Em atenção';
+          else lessonsData[index].criticidade = 'Dominada';
+        }
+      }
+      renderTable();
+    }
+
+    function addLessonRow() {
+      const nextNum = lessonsData.length + 1;
+      lessonsData.push({
+        dia: '',
+        aula: `Aula ${nextNum}: `,
+        ae: '',
+        objetivo: '',
+        conteudo: '',
+        habilidade: '',
+        prioridade: 'Prioridade 1',
+        criticidade: 'Sem dados',
+        acerto: '',
+        decisao: 'Manter',
+        acao: ''
+      });
+      renderTable();
+    }
+
+    function removeLessonRow(index) {
+      lessonsData.splice(index, 1);
+      renderTable();
+    }
+
+    function clearAllRows() {
+      lessonsData = [];
+      renderTable();
+      showToast('Tabela limpa.', 'info');
+    }
+
+    // =========================================================================
+    // 5. ASSISTENTE DE DECISÃO PEDAGÓGICA (COLUNAS 11 E 12)
+    // =========================================================================
+    function autoSuggestPedagogicalDecisions() {
+      if (lessonsData.length === 0) {
+        showToast('Carregue ou adicione aulas antes de gerar sugestões.', 'warning');
+        return;
+      }
+
+      lessonsData = lessonsData.map(row => {
+        let decisao = row.decisao;
+        let acao = row.acao;
+
+        if (row.criticidade === 'Crítica') {
+          decisao = 'Reorganizar e ampliar';
+          acao = acao || `Retomar pré-requisitos da ${row.ae.split('-')[0].trim() || 'habilidade'} com estações de aprendizagem, exemplos resolvidos passo a passo e monitoramento individualizado.`;
+        } else if (row.criticidade === 'Em atenção' || row.prioridade === 'Prioridade 1') {
+          decisao = 'Adaptar e ampliar';
+          acao = acao || `Manter material digital SEDUC-SP ampliando com itens comentados no formato Prova Paulista/SAEB (${row.habilidade.split('(')[0].trim() || 'descritor prioritário'}).`;
+        } else {
+          decisao = 'Manter';
+          acao = acao || 'Seguir sequência didática do Material Digital SEDUC-SP com sistematização no caderno e verificação rápida de aprendizagem.';
+        }
+
+        return { ...row, decisao, acao };
+      });
+
+      renderTable();
+      showToast('Decisões pedagógicas (Colunas 11 e 12) preenchidas com base na prioridade e criticidade!', 'success');
+    }
+
+    // =========================================================================
+    // 6. UPLOAD, LEITURA E INDEXAÇÃO INTELIGENTE DE PDF (EF & ENSINO MÉDIO)
+    // =========================================================================
+    function initPdfDropzone() {
+      const dropzone = document.getElementById('pdf-dropzone');
+      if (!dropzone || dropzone.dataset.initialized === 'true') return;
+      dropzone.dataset.initialized = 'true';
+
+      ['dragenter', 'dragover'].forEach(evtName => {
+        dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('border-[#57C2A2]', 'bg-[#DEF3EC]/40');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(evtName => {
+        dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('border-[#57C2A2]', 'bg-[#DEF3EC]/40');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer?.files;
+        if (files && files.length > 0) {
+          loadPdfFile(files[0]);
+        }
+      });
+    }
+
+    function handlePdfUpload(event) {
+      const files = event?.target?.files;
+      if (files && files.length > 0) {
+        loadPdfFile(files[0]);
+      }
+    }
+
+    async function openPdfDocumentSafe(uint8Data) {
+      if (typeof pdfjsLib === 'undefined') {
+        throw new Error('Biblioteca PDF.js indisponível.');
+      }
+      try {
+        return await pdfjsLib.getDocument({ data: uint8Data }).promise;
+      } catch (workerErr) {
+        // Fallback sem Web Worker para ambientes restritos (Google Sites / iframes)
+        return await pdfjsLib.getDocument({ data: uint8Data, disableWorker: true }).promise;
+      }
+    }
+
+    function normalizeTextSearch(str) {
+      return (str || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function detectGuideMetadataFromSources(fileName, pages) {
+      const cleanFile = normalizeTextSearch(fileName).replace(/[_\-\.]+/g, ' ');
+      const frontRaw = Array.isArray(pages) && pages.length > 0
+        ? pages.slice(0, Math.min(12, pages.length)).map(p => p.text).join('\n')
+        : '';
+      const sampleRaw = Array.isArray(pages) && pages.length > 0
+        ? pages.slice(0, Math.min(40, pages.length)).map(p => p.text).join('\n')
+        : '';
+
+      const frontNorm = normalizeTextSearch(frontRaw);
+      const sampleNorm = normalizeTextSearch(sampleRaw);
+      const combinedNorm = cleanFile + '\n' + sampleNorm;
+
+      // 1. Detecção da Etapa de Ensino e Série/Ano
+      let etapa = 'Ensino Fundamental - Anos Finais';
+      let label = 'Anos Finais (EF)';
+      let gradeValue = null;
+
+      const isEM = /\bensino\s*medio\b|\b1[aª°]\s*serie\b|\b2[aª°]\s*serie\b|\b3[aª°]\s*serie\b|\bprovao\s*paulista\b|\bde\s*olho\s*no\s*enem\b|\bem13[a-z]{3}\b/.test(combinedNorm);
+      const isAI = /\banos\s*iniciais\b/.test(combinedNorm) && !/\banos\s*finais\b/.test(combinedNorm);
+
+      if (isEM) {
+        etapa = 'Ensino Médio';
+        label = 'Ensino Médio';
+        if (/\b1[aª°]\s*serie\b/.test(combinedNorm)) gradeValue = '1ª Série';
+        else if (/\b2[aª°]\s*serie\b/.test(combinedNorm)) gradeValue = '2ª Série';
+        else if (/\b3[aª°]\s*serie\b/.test(combinedNorm)) gradeValue = '3ª Série';
+        else gradeValue = '1ª Série';
+      } else if (isAI) {
+        etapa = 'Ensino Fundamental - Anos Iniciais';
+        label = 'Anos Iniciais (EF)';
+        gradeValue = '1º Ano';
+      } else {
+        etapa = 'Ensino Fundamental - Anos Finais';
+        label = 'Anos Finais (EF)';
+        if (/\b6[oº°]\s*ano\b/.test(combinedNorm)) gradeValue = '6º Ano';
+        else if (/\b7[oº°]\s*ano\b/.test(combinedNorm)) gradeValue = '7º Ano';
+        else if (/\b8[oº°]\s*ano\b/.test(combinedNorm)) gradeValue = '8º Ano';
+        else if (/\b9[oº°]\s*ano\b/.test(combinedNorm)) gradeValue = '9º Ano';
+      }
+
+      // 2. Detecção do Componente Curricular (Nome do arquivo + Capa/Cabeçalhos + Códigos BNCC)
+      const candidates = [
+        { name: 'Língua Portuguesa', re: /\blingua\s*portuguesa\b/g, codeRe: /\b(?:ef\d{2}lp\d{2}|ef69lp\d{2}|ef89lp\d{2}|em13lp\d{2}|em13lgg\d{3})\b/g },
+        { name: 'Matemática', re: /\bmatematica\b/g, codeRe: /\b(?:ef\d{2}ma\d{2}|em13mat\d{3})\b/g },
+        { name: 'Redação e Leitura', re: /\bredacao\s*e\s*leitura\b|\bredacao\b/g, codeRe: /\bredacao\b/g },
+        { name: 'Educação Financeira', re: /\beducacao\s*financeira\b/g, codeRe: /\beducacao\s*financeira\b/g },
+        { name: 'Tecnologia e Inovação', re: /\btecnologia\s*e\s*inovacao\b|\btecnologia\b/g, codeRe: /\btecnologia\b/g },
+        { name: 'Língua Inglesa', re: /\blingua\s*inglesa\b|\bingles\b/g, codeRe: /\bef\d{2}li\d{2}\b/g },
+        { name: 'Educação Física', re: /\beducacao\s*fisica\b/g, codeRe: /\bef\d{2}ef\d{2}\b/g },
+        { name: 'Ciências', re: /\bciencias\b(?!\s+da\s+natureza|\s+humanas)/g, codeRe: /\bef\d{2}ci\d{2}\b/g },
+        { name: 'Biologia', re: /\bbiologia\b/g, codeRe: /\bbiologia\b/g },
+        { name: 'Física', re: /\bfisica\b/g, codeRe: /\bfisica\b/g },
+        { name: 'Química', re: /\bquimica\b/g, codeRe: /\bquimica\b/g },
+        { name: 'História', re: /\bhistoria\b/g, codeRe: /\bef\d{2}hi\d{2}\b/g },
+        { name: 'Geografia', re: /\bgeografia\b/g, codeRe: /\bef\d{2}ge\d{2}\b/g },
+        { name: 'Filosofia', re: /\bfilosofia\b/g, codeRe: /\bfilosofia\b/g },
+        { name: 'Sociologia', re: /\bsociologia\b/g, codeRe: /\bsociologia\b/g },
+        { name: 'Arte', re: /\barte\b/g, codeRe: /\bef\d{2}ar\d{2}\b/g }
+      ];
+
+      let bestComp = '';
+      let bestScore = 0;
+
+      for (const cand of candidates) {
+        let score = 0;
+        if (cand.re.test(cleanFile)) score += 100;
+        const frontMatches = frontNorm.match(cand.re);
+        if (frontMatches) score += Math.min(60, frontMatches.length * 15);
+        const codeMatches = sampleNorm.match(cand.codeRe);
+        if (codeMatches) score += Math.min(50, codeMatches.length * 2);
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestComp = cand.name;
+        }
+      }
+
+      if (!bestComp && isEM) {
+        if (/\bem13cnt\b/.test(combinedNorm)) bestComp = 'Ciências da Natureza';
+        else if (/\bem13chs\b/.test(combinedNorm)) bestComp = 'Ciências Humanas';
+        else if (/\bem13lgg\b/.test(combinedNorm)) bestComp = 'Linguagens e suas Tecnologias';
+      }
+
+      return { etapa, label, gradeOption: gradeValue, componente: bestComp };
+    }
+
+    function applyDetectedMetadataToUI(detection, pageCountText) {
+      if (!detection) return;
+
+      const compInput = document.getElementById('meta-componente');
+      const compBadge = document.getElementById('comp-auto-badge');
+      const etapaSelect = document.getElementById('meta-etapa');
+      const gradeSelect = document.getElementById('extract-grade');
+      const pdfBadge = document.getElementById('pdf-detected-badge');
+      const pdfSub = document.getElementById('pdf-pagecount');
+
+      if (etapaSelect && detection.etapa) {
+        etapaSelect.value = detection.etapa;
+      }
+
+      if (gradeSelect && detection.gradeOption) {
+        const hasGrade = Array.from(gradeSelect.options).some(o => o.value === detection.gradeOption);
+        if (hasGrade) {
+          gradeSelect.value = detection.gradeOption;
+          handleGradeFilterChange();
+        }
+      }
+
+      if (compInput) {
+        compInput.value = detection.componente || '';
+      }
+      if (compBadge) {
+        if (detection.componente) compBadge.classList.remove('hidden');
+        else compBadge.classList.add('hidden');
+      }
+
+      if (pdfBadge && detection.label) {
+        pdfBadge.textContent = detection.label;
+        pdfBadge.classList.remove('hidden');
+      }
+      if (pdfSub && pageCountText) {
+        pdfSub.textContent = detection.componente
+          ? `${pageCountText} • ${detection.componente}`
+          : pageCountText;
+      }
+    }
+
+    async function loadPdfFile(file) {
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      if (!isPdf) {
+        showToast('Por favor, selecione um arquivo PDF válido (.pdf).', 'error');
+        return;
+      }
+
+      // Passo 1 (Síncrono): Detecta imediatamente pelo nome do arquivo
+      const initialDetection = detectGuideMetadataFromSources(file.name, []);
+      detectedGuideMeta = initialDetection;
+      document.getElementById('pdf-empty-state').classList.add('hidden');
+      document.getElementById('pdf-loaded-state').classList.remove('hidden');
+      document.getElementById('pdf-filename').textContent = file.name;
+      applyDetectedMetadataToUI(initialDetection, 'Lendo páginas...');
+
+      try {
+        setProgress(true, 'Abrindo e indexando páginas do PDF...', 8);
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Data = new Uint8Array(arrayBuffer);
+
+        loadedPdfDoc = await openPdfDocumentSafe(uint8Data);
+        loadedPdfName = file.name;
+        cachedPdfPages = [];
+
+        const total = loadedPdfDoc.numPages;
+        for (let p = 1; p <= total; p++) {
+          if (p === 1 || p % 5 === 0 || p === total) {
+            const pct = 10 + Math.round((p / total) * 85);
+            setProgress(true, `Lendo página ${p} de ${total}...`, pct);
+          }
+          const page = await loadedPdfDoc.getPage(p);
+          const content = await page.getTextContent();
+          const structuredText = reconstructPageText(content.items);
+          cachedPdfPages.push({
+            pageNum: p,
+            text: structuredText,
+            lower: structuredText.toLowerCase(),
+            items: content.items
+          });
+        }
+
+        // Passo 2 (Refinamento): Confirma Componente Curricular e Etapa usando o texto real e códigos BNCC do PDF
+        const refinedDetection = detectGuideMetadataFromSources(file.name, cachedPdfPages);
+        detectedGuideMeta = refinedDetection;
+        applyDetectedMetadataToUI(refinedDetection, `${total} páginas prontas para leitura`);
+
+        setProgress(false);
+        const compMsg = refinedDetection.componente ? ` • Componente: ${refinedDetection.componente}` : '';
+        showToast(`PDF "${file.name}" importado (${total} páginas • ${refinedDetection.label}${compMsg}).`, 'success');
+      } catch (err) {
+        console.error('Erro ao importar PDF:', err);
+        setProgress(false);
+        const msg = err?.name === 'PasswordException'
+          ? 'Este PDF está protegido por senha.'
+          : 'Não foi possível ler este PDF automaticamente. Você pode usar o botão "Colar texto" no canto superior do cartão.';
+        showToast(msg, 'error');
+      }
+    }
+
+    // =========================================================================
+    // 7. EXTRAÇÃO UNIVERSAL DE AULAS & CRUZAMENTO COM FAROL / SAEB / ENEM
+    // =========================================================================
+    function reconstructPageText(items) {
+      if (!Array.isArray(items) || items.length === 0) return '';
+      const sorted = items
+        .filter(it => it && typeof it.str === 'string' && it.str.trim().length > 0)
+        .map(it => ({
+          str: it.str.trim(),
+          x: Math.round(it.transform?.[4] || 0),
+          y: Math.round(it.transform?.[5] || 0)
+        }))
+        .sort((a, b) => (Math.abs(b.y - a.y) > 6 ? b.y - a.y : a.x - b.x));
+
+      const lines = [];
+      let currentLine = [];
+      let lastY = null;
+
+      for (const item of sorted) {
+        if (lastY === null || Math.abs(item.y - lastY) <= 6) {
+          currentLine.push(item);
+        } else {
+          currentLine.sort((a, b) => a.x - b.x);
+          lines.push(currentLine.map(c => c.str).join(' '));
+          currentLine = [item];
+        }
+        lastY = item.y;
+      }
+      if (currentLine.length > 0) {
+        currentLine.sort((a, b) => a.x - b.x);
+        lines.push(currentLine.map(c => c.str).join(' '));
+      }
+      return lines.join('\n');
+    }
+
+    function detectScopeSectionBounds(pages, gradeTarget, bimestreTarget) {
+      const gradeNorm = normalizeTextSearch(gradeTarget);
+      const bimNumMatch = String(bimestreTarget || '').match(/(\d)/);
+      const bimNum = bimNumMatch ? bimNumMatch[1] : '1';
+      const bimRegex = new RegExp(`\\b${bimNum}[oº°aª]?\\s*bimestre\\b`, 'i');
+      const otherBimRegex = /\b([1-4])[oº°aª]?\s*bimestre\b/g;
+
+      let activeGrade = '';
+      let activeBim = '';
+      let inEscopoSection = false;
+      const scopePages = [];
+      const diagPages = [];
+
+      for (const p of pages) {
+        const pNorm = normalizeTextSearch(p.text);
+        const topSlice = pNorm.slice(0, 750);
+
+        // Identifica mudança de Ano/Série nos títulos de seção/cabeçalho da página
+        const gradeMatches = topSlice.match(/\b([1-9][oº°]\s*ano|[1-3][aª°]\s*serie)\b/g) || [];
+        if (gradeMatches.length > 0) {
+          const uniqueGrades = Array.from(new Set(gradeMatches.map(g => g.replace(/[º°]/g, 'o').replace(/[ª°]/g, 'a'))));
+          if (uniqueGrades.length === 1) {
+            activeGrade = uniqueGrades[0];
+          } else if (gradeNorm && uniqueGrades.includes(gradeNorm)) {
+            activeGrade = gradeNorm;
+          }
+        }
+
+        // Identifica início e fim da seção "Escopo-Sequência"
+        const hasEscopoHeader = /\bescopo[\s\-–—]*sequencia\b/.test(topSlice) ||
+          (/\baprendizagem\s*essencial\b/.test(topSlice) && /\bobjetivos?\s*de\s*aprendizagem\b/.test(topSlice));
+        const hasNonEscopoSection = /\b(?:farol\s*da\s*prova|de\s*olho\s*no\s*(?:saeb|saresp|enem|provao)|habilidades\s*prioritarias|matriz\s*de\s*referencia|apresentacao|sumario)\b/.test(topSlice) && !hasEscopoHeader;
+
+        if (hasEscopoHeader) {
+          inEscopoSection = true;
+        } else if (hasNonEscopoSection) {
+          inEscopoSection = false;
+        }
+
+        // Identifica o Bimestre ativo na página
+        const bMatches = Array.from(topSlice.matchAll(otherBimRegex)).map(m => m[1]);
+        if (bMatches.length > 0) {
+          const uniqueBims = Array.from(new Set(bMatches));
+          if (uniqueBims.length === 1) {
+            activeBim = uniqueBims[0];
+          } else if (uniqueBims.includes(bimNum)) {
+            activeBim = bimNum;
+          }
+        }
+
+        const isGradeOk = !gradeNorm || activeGrade === gradeNorm || pNorm.includes(gradeNorm);
+        const isBimOk = activeBim === bimNum || bimRegex.test(topSlice);
+        const hasLessonTableRows = /\baulas?\s*\d+\b/.test(pNorm) || /\bae\s*\d+\b/.test(pNorm) || hasEscopoHeader;
+
+        if (isGradeOk && isBimOk && (inEscopoSection || hasLessonTableRows) && !hasNonEscopoSection) {
+          scopePages.push(p);
+        }
+
+        if (isGradeOk && /\b(?:farol\s*da\s*prova|de\s*olho\s*no\s*(?:saeb|saresp|enem|provao)|habilidades\s*prioritarias)\b/.test(pNorm)) {
+          diagPages.push(p);
+        }
+      }
+
+      return { scopePages, diagPages };
+    }
+
+    function filterTargetPages(pages, gradeTarget, bimestreTarget, startPageOpt, endPageOpt) {
+      if (!Array.isArray(pages) || pages.length === 0) return [];
+      const startIdx = startPageOpt && startPageOpt >= 1 ? Math.max(0, startPageOpt - 1) : 0;
+      const endIdx = endPageOpt && endPageOpt >= startIdx + 1 ? Math.min(pages.length, endPageOpt) : pages.length;
+      const sliced = pages.slice(startIdx, endIdx);
+      if (startPageOpt || endPageOpt) {
+        return { scopePages: sliced, diagPages: [] };
+      }
+
+      const { scopePages, diagPages } = detectScopeSectionBounds(sliced, gradeTarget, bimestreTarget);
+      if (scopePages.length > 0) {
+        return { scopePages, diagPages };
+      }
+
+      // Fallback amplo caso o cabeçalho da página não repita o nome da série
+      const bimNumMatch = String(bimestreTarget || '').match(/(\d)/);
+      const bimNum = bimNumMatch ? bimNumMatch[1] : '1';
+      const bimRegex = new RegExp(`\\b${bimNum}[oº°aª]?\\s*bimestre\\b`, 'i');
+      const fallbackScope = sliced.filter(p => {
+        const pNorm = normalizeTextSearch(p.text);
+        return bimRegex.test(pNorm) && /\baulas?\s*\d+\b/.test(pNorm);
+      });
+
+      return {
+        scopePages: fallbackScope.length > 0 ? fallbackScope : sliced.slice(0, Math.min(40, sliced.length)),
+        diagPages
+      };
+    }
+
+    async function callGeminiExtractionAPI(scopeText, diagText, componente, gradeTarget, bimTarget) {
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const systemPrompt = `Você é um especialista pedagógico da SEDUC-SP. Analise o bloco "ESCOPO-SEQUÊNCIA" do Guia do Currículo Priorizado 2027 para ${gradeTarget} (${bimTarget}) do componente ${componente}, cruzando com o bloco "FAROL DA PROVA PAULISTA / SAEB / SARESP / ENEM".
+REGRAS OBRIGATÓRIAS:
+1. Extraia TODAS AS AULAS do Escopo-Sequência deste bimestre, da Aula 1 até a última aula (ex.: Aula 1 até Aula 24, 28, 32, etc.), sem pular ou resumir nenhuma aula.
+2. Cada aula DEVE ser retornada como um objeto INDIVIDUAL (Aula 1, Aula 2, Aula 3...). Se no PDF houver linha agrupada (ex: "Aulas 1 e 2: Título", "Aulas 1, 2 e 3: Título" ou "Aulas 3 a 5: Título"), desmembre em linhas individuais ("Aula 1: Título", "Aula 2: Título", etc.), replicando os respectivos objetivos, conteúdos e habilidades.
+3. Retorne exclusivamente um array JSON válido seguindo o schema fornecido:
+- aula: número individual e título exato (ex: "Aula 1: Título da aula")
+- ae: código e descrição da Aprendizagem Essencial correspondente (ex: "AE1 - ...")
+- objetivo: objetivos de aprendizagem da aula
+- conteudo: conteúdo do Escopo-Sequência cruzado com o Farol da Prova Paulista
+- habilidade: descritor SAEB/SARESP/ENEM + código da habilidade BNCC/Currículo Paulista
+- prioridade: "Prioridade 1", "Prioridade 2", "Prioridade 3" ou "Não identificada"`;
+
+      const combinedContext = `=== ESCOPO-SEQUÊNCIA (${gradeTarget} - ${bimTarget}) ===\n${scopeText.slice(0, 95000)}\n\n=== MATRIZES DE DIAGNÓSTICO (FAROL PROVA PAULISTA / SAEB / ENEM) ===\n${diagText.slice(0, 25000)}`;
+
+      const payload = {
+        contents: [{
+          parts: [{
+            text: `Componente: ${componente}\nSérie/Ano: ${gradeTarget}\nBimestre: ${bimTarget}\n\n${combinedContext}`
+          }]
+        }],
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                aula: { type: "STRING" },
+                ae: { type: "STRING" },
+                objetivo: { type: "STRING" },
+                conteudo: { type: "STRING" },
+                habilidade: { type: "STRING" },
+                prioridade: {
+                  type: "STRING",
+                  enum: ["Prioridade 1", "Prioridade 2", "Prioridade 3", "Não identificada"]
+                }
+              },
+              required: ["aula", "ae", "objetivo", "conteudo", "habilidade", "prioridade"]
+            }
+          }
+        }
+      };
+
+      const delays = [1000, 2000, 4000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            if ((response.status === 429 || response.status >= 500) && attempt < delays.length) {
+              await new Promise(r => setTimeout(r, delays[attempt]));
+              continue;
+            }
+            return null;
+          }
+
+          const result = await response.json();
+          const rawJson = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawJson) return null;
+
+          const parsed = JSON.parse(rawJson);
+          if (!Array.isArray(parsed) || parsed.length === 0) return null;
+
+          const validPriorities = ['Prioridade 1', 'Prioridade 2', 'Prioridade 3', 'Não identificada'];
+          const rawMapped = parsed.map((item, idx) => ({
+            dia: '',
+            aula: (item.aula || `Aula ${idx + 1}`).trim(),
+            ae: (item.ae || '').trim(),
+            objetivo: (item.objetivo || '').trim(),
+            conteudo: (item.conteudo || '').trim(),
+            habilidade: (item.habilidade || '').trim(),
+            prioridade: validPriorities.includes(item.prioridade) ? item.prioridade : 'Prioridade 1',
+            criticidade: 'Sem dados',
+            acerto: '',
+            decisao: 'Manter',
+            acao: ''
+          }));
+          return expandGroupedLessons(rawMapped);
+        } catch (e) {
+          if (attempt < delays.length) {
+            await new Promise(r => setTimeout(r, delays[attempt]));
+          } else {
+            return null;
+          }
+        }
+      }
+      return null;
+    }
+
+    function expandGroupedLessons(lessonsList) {
+      const expanded = [];
+
+      for (const item of lessonsList) {
+        // Caso 1: Intervalo contínuo ("Aulas 3 a 5: Título" ou "Aulas 1-2: Título")
+        const rangeMatch = item.aula.match(/^Aulas?\s*(\d+)\s*(?:a|até|-|–|\/)\s*(\d+)\s*[:\-–—]?\s*(.*)$/i);
+        if (rangeMatch) {
+          const startNum = parseInt(rangeMatch[1], 10);
+          const endNum = parseInt(rangeMatch[2], 10);
+          const restTitle = (rangeMatch[3] || '').trim();
+
+          if (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum && (endNum - startNum) <= 20) {
+            for (let n = startNum; n <= endNum; n++) {
+              expanded.push({
+                ...item,
+                aula: restTitle ? `Aula ${n}: ${restTitle}` : `Aula ${n}`
+              });
+            }
+            continue;
+          }
+        }
+
+        // Caso 2: Lista explícita ("Aulas 1 e 2: Título" ou "Aulas 1, 2 e 3: Título")
+        const listMatch = item.aula.match(/^Aulas?\s*((?:\d+\s*,\s*)*\d+\s*(?:e|&)\s*\d+)\s*[:\-–—]?\s*(.*)$/i);
+        if (listMatch) {
+          const nums = listMatch[1].match(/\d+/g)?.map(n => parseInt(n, 10)) || [];
+          const restTitle = (listMatch[2] || '').trim();
+          if (nums.length > 0 && nums.length <= 20) {
+            for (const n of nums) {
+              expanded.push({
+                ...item,
+                aula: restTitle ? `Aula ${n}: ${restTitle}` : `Aula ${n}`
+              });
+            }
+            continue;
+          }
+        }
+
+        // Caso 3: Aula individual ("Aula 1: Título" ou "Aula 01 - Título")
+        const singleMatch = item.aula.match(/^Aulas?\s*(\d+)\s*[:\-–—]?\s*(.*)$/i);
+        if (singleMatch) {
+          const num = parseInt(singleMatch[1], 10);
+          const restTitle = (singleMatch[2] || '').trim();
+          if (!isNaN(num)) {
+            expanded.push({
+              ...item,
+              aula: restTitle ? `Aula ${num}: ${restTitle}` : `Aula ${num}`
+            });
+            continue;
+          }
+        }
+
+        expanded.push(item);
+      }
+
+      return expanded;
+    }
+
+    // Extrator tabular por coordenadas X/Y para capturar 100% das linhas do Escopo-Sequência
+    function parseEscopoTableByCoordinates(scopePages) {
+      const rows = [];
+      let currentAE = '';
+      let currentSkill = '';
+      let currentBlock = null;
+
+      for (const p of scopePages) {
+        if (!Array.isArray(p.items) || p.items.length === 0) continue;
+
+        // Agrupa itens por linha visual (coordenada Y)
+        const sorted = p.items
+          .filter(it => it && typeof it.str === 'string' && it.str.trim().length > 0)
+          .map(it => ({
+            str: it.str.trim(),
+            x: Math.round(it.transform?.[4] || 0),
+            y: Math.round(it.transform?.[5] || 0)
+          }))
+          .sort((a, b) => (Math.abs(b.y - a.y) > 5 ? b.y - a.y : a.x - b.x));
+
+        const visualLines = [];
+        let lineBuf = [];
+        let lastY = null;
+        for (const it of sorted) {
+          if (lastY === null || Math.abs(it.y - lastY) <= 5) {
+            lineBuf.push(it);
+          } else {
+            lineBuf.sort((a, b) => a.x - b.x);
+            visualLines.push(lineBuf);
+            lineBuf = [it];
+          }
+          lastY = it.y;
+        }
+        if (lineBuf.length > 0) {
+          lineBuf.sort((a, b) => a.x - b.x);
+          visualLines.push(lineBuf);
+        }
+
+        // Detecta posições X das colunas do cabeçalho da tabela do Escopo-Sequência, se presente na página
+        let colAulaX = null;
+        let colObjX = null;
+        let colContX = null;
+        for (const vLine of visualLines) {
+          const joined = normalizeTextSearch(vLine.map(c => c.str).join(' '));
+          if (joined.includes('aula') && (joined.includes('objetivo') || joined.includes('conteudo'))) {
+            for (const cell of vLine) {
+              const cn = normalizeTextSearch(cell.str);
+              if (/^aulas?\b/.test(cn) && colAulaX === null) colAulaX = cell.x;
+              if (/^objetivos?\b/.test(cn) && colObjX === null) colObjX = cell.x;
+              if (/^conteudos?\b/.test(cn) && colContX === null) colContX = cell.x;
+            }
+          }
+        }
+
+        // Fallback de faixas horizontais padrão paisagem A4 SEDUC-SP (~842pt largura)
+        const minAulaX = colAulaX !== null ? Math.max(0, colAulaX - 35) : 140;
+        const maxAulaX = colObjX !== null ? colObjX - 15 : 350;
+        const maxObjX = colContX !== null ? colContX - 15 : 590;
+
+        for (const vLine of visualLines) {
+          const fullLineText = vLine.map(c => c.str).join(' ').replace(/\s+/g, ' ').trim();
+          const normLine = normalizeTextSearch(fullLineText);
+
+          // Ignora cabeçalhos/rodapés repetitivos de página
+          if (/^(?:escopo[\s\-–—]*sequencia|aprendizagem\s*essencial|objetivos?\s*de\s*aprendizagem|conteudos?|pagina\s*\d+|\d+\s*$|ensino\s*(?:fundamental|medio)|anos\s*(?:iniciais|finais)|[1-4][oº°]\s*bimestre)/i.test(normLine)) {
+            continue;
+          }
+
+          // Captura mudança de Aprendizagem Essencial (AE1, AE2...) na coluna da esquerda
+          const aeHit = fullLineText.match(/\b(AE\s*\d+)\s*[-–—:.]?\s*(.*)/i);
+          if (aeHit && vLine[0].x < minAulaX + 30) {
+            const aeCode = aeHit[1].replace(/\s+/g, '').toUpperCase();
+            const aeDesc = aeHit[2].trim();
+            currentAE = aeDesc ? `${aeCode} - ${aeDesc}` : aeCode;
+          } else if (currentAE && vLine[0].x < minAulaX - 15 && !/\bAulas?\s*\d+/i.test(fullLineText)) {
+            // Continuação do texto da AE na coluna 1
+            const leftText = vLine.filter(c => c.x < minAulaX - 10).map(c => c.str).join(' ').trim();
+            if (leftText && !/^(?:EF\d{2}|EM13)/i.test(leftText) && currentAE.length < 420) {
+              currentAE = `${currentAE} ${leftText}`.replace(/\s+/g, ' ').trim();
+            }
+          }
+
+          // Captura códigos de habilidade BNCC/Currículo Paulista na linha
+          const lineSkills = fullLineText.match(/\b(?:EF\d{2}[A-Z]{2}\d{2}|EM13[A-Z]{3}\d{3})\b/g);
+          if (lineSkills && lineSkills.length > 0) {
+            currentSkill = Array.from(new Set(lineSkills)).join('; ');
+          }
+
+          // Verifica início de nova Aula (ex: "Aula 1:", "Aula 02 -", "Aulas 3 e 4:", "Aulas 5 a 7:")
+          const aulaMatch = fullLineText.match(/\b(Aulas?\s*\d+(?:\s*(?:,|e|&|a|até|-|–|\/)\s*\d+)*)\s*[:\-–—.]?\s*(.*)/i);
+          const aulaToken = vLine.find(c => /\bAulas?\s*\d+/i.test(c.str));
+          const isRealAulaStart = aulaMatch && aulaToken && aulaToken.x >= minAulaX - 25 && aulaToken.x <= maxAulaX + 35 &&
+            !/^Aulas?\s*\d+(?:\s*(?:,|e|&|a|até|-|–|\/)\s*\d+)*\s*[.;)]$/i.test(aulaMatch[0].trim());
+
+          if (isRealAulaStart) {
+            if (currentBlock) {
+              rows.push(currentBlock);
+            }
+            const aulaLabel = aulaMatch[1].replace(/\s+/g, ' ').trim();
+            const inlineAulaTitle = vLine
+              .filter(c => c.x >= minAulaX - 20 && c.x <= maxAulaX)
+              .map(c => c.str)
+              .join(' ')
+              .replace(/^Aulas?\s*\d+(?:\s*(?:,|e|&|a|até|-|–|\/)\s*\d+)*\s*[:\-–—.]?\s*/i, '')
+              .trim();
+            const inlineObj = vLine
+              .filter(c => c.x > maxAulaX && c.x <= maxObjX)
+              .map(c => c.str)
+              .join(' ')
+              .trim();
+            const inlineCont = vLine
+              .filter(c => c.x > maxObjX)
+              .map(c => c.str)
+              .join(' ')
+              .trim();
+
+            currentBlock = {
+              aulaNumStr: aulaLabel,
+              titleParts: inlineAulaTitle ? [inlineAulaTitle] : [],
+              objParts: inlineObj ? [inlineObj] : [],
+              contParts: inlineCont ? [inlineCont] : [],
+              ae: currentAE,
+              skill: currentSkill
+            };
+          } else if (currentBlock) {
+            // Acumula linhas de continuação nas respectivas colunas (Aula, Objetivo, Conteúdo)
+            const tPart = vLine.filter(c => c.x >= minAulaX - 15 && c.x <= maxAulaX).map(c => c.str).join(' ').trim();
+            const oPart = vLine.filter(c => c.x > maxAulaX && c.x <= maxObjX).map(c => c.str).join(' ').trim();
+            const cPart = vLine.filter(c => c.x > maxObjX).map(c => c.str).join(' ').trim();
+
+            if (tPart && currentBlock.titleParts.join(' ').length < 220) currentBlock.titleParts.push(tPart);
+            if (oPart) currentBlock.objParts.push(oPart);
+            if (cPart) currentBlock.contParts.push(cPart);
+            if (currentSkill && !currentBlock.skill) currentBlock.skill = currentSkill;
+            if (currentAE && !currentBlock.ae) currentBlock.ae = currentAE;
+          }
+        }
+      }
+
+      if (currentBlock) {
+        rows.push(currentBlock);
+      }
+      return rows;
+    }
+
+    function parseLessonsFromPdfPages(targetPages, allPages) {
+      const diagSource = (allPages && allPages.length > 0) ? allPages : targetPages;
+      const allText = diagSource.map(p => p.text).join('\n');
+
+      // Extrai descritores SAEB / SARESP / ENEM do Farol ou da seção "De olho no..."
+      const saebDescriptors = Array.from(new Set(
+        (allText.match(/\b(?:\dEF-D\d+|EM-D\d+|3EM-D\d+|D\d{1,2}\s*\([^)]+\)|ENEM\s*C\d+-H\d+|H\d{2}\s*\(ENEM\))\b/gi) || [])
+          .map(s => s.trim())
+      ));
+
+      // 1. Tenta extração estruturada por coordenadas X/Y da tabela do Escopo-Sequência
+      const coordBlocks = parseEscopoTableByCoordinates(targetPages);
+      if (coordBlocks.length > 0) {
+        const mappedFromCoords = coordBlocks.map((blk, idx) => {
+          const titleTxt = blk.titleParts.join(' ').replace(/\s+/g, ' ').trim();
+          const fullAula = titleTxt ? `${blk.aulaNumStr}: ${titleTxt}` : blk.aulaNumStr;
+          const objTxt = blk.objParts.join(' ').replace(/\s+/g, ' ').trim() || `Desenvolver os objetivos previstos na ${fullAula}.`;
+          const contTxt = blk.contParts.join(' ').replace(/\s+/g, ' ').trim() || titleTxt || blk.aulaNumStr;
+          const descTxt = saebDescriptors[idx % Math.max(1, saebDescriptors.length)] || '';
+          const skillCombined = [descTxt, blk.skill ? `(${blk.skill})` : ''].filter(Boolean).join(' ').trim() || 'Conforme Matriz Curricular';
+
+          return {
+            dia: '',
+            aula: fullAula,
+            ae: blk.ae || 'Aprendizagem Essencial conforme Escopo-Sequência do Guia Priorizado',
+            objetivo: objTxt,
+            conteudo: contTxt,
+            habilidade: skillCombined,
+            prioridade: (descTxt || idx < 8) ? 'Prioridade 1' : (idx < 16 ? 'Prioridade 2' : 'Prioridade 3'),
+            criticidade: 'Sem dados',
+            acerto: '',
+            decisao: 'Manter',
+            acao: ''
+          };
+        });
+        return expandGroupedLessons(mappedFromCoords);
+      }
+
+      // 2. Fallback textual caso o conteúdo tenha sido colado manualmente (sem coordenadas PDF)
+      const fullText = targetPages.map(p => p.text).join('\n');
+      const aeMap = {};
+      const aeRegex = /\b(AE\s*\d+)\s*[-–—:.]?\s*([^\n]+(?:\n(?!(?:AE\s*\d+|Aula\s*\d+|Objetivos|Conte[uú]do|Habilidade|EF\d{2}|EM13))[^\n]+)*)/gi;
+      let aeMatch;
+      while ((aeMatch = aeRegex.exec(fullText)) !== null) {
+        const code = aeMatch[1].replace(/\s+/g, '').toUpperCase();
+        const desc = aeMatch[2].replace(/\s+/g, ' ').trim();
+        if (desc.length > 8 && !aeMap[code]) {
+          aeMap[code] = `${code} - ${desc}`;
+        }
+      }
+
+      const skillCodes = Array.from(new Set(
+        (fullText.match(/\b(?:EF\d{2}[A-Z]{2}\d{2}|EM13[A-Z]{3}\d{3})\b/g) || [])
+      ));
+
+      const aulaHeaderRegex = /(?:^|\n)\s*(Aulas?\s*\d+(?:\s*(?:,|e|&|a|até|-|–|\/)\s*\d+)*\s*(?:[-–—:]\s*[^\n]+)?)/gi;
+      const matches = [];
+      let m;
+      while ((m = aulaHeaderRegex.exec(fullText)) !== null) {
+        const headerClean = m[1].replace(/\s+/g, ' ').trim();
+        if (/^Aulas?\s*\d+(?:\s*(?:,|e|&|a|até|-|–|\/)\s*\d+)*\s*[.;)]$/i.test(headerClean)) continue;
+        matches.push({ title: headerClean, index: m.index });
+      }
+
+      const lessonBlocks = [];
+      for (let i = 0; i < matches.length; i++) {
+        const cur = matches[i];
+        const nextIdx = i + 1 < matches.length ? matches[i + 1].index : Math.min(fullText.length, cur.index + 1800);
+        const block = fullText.slice(cur.index, nextIdx);
+
+        const contextBefore = fullText.slice(Math.max(0, cur.index - 1100), cur.index + block.length);
+        const blockAeMatch = contextBefore.match(/\b(AE\s*\d+)\b/i);
+        const aeKey = blockAeMatch ? blockAeMatch[1].replace(/\s+/g, '').toUpperCase() : '';
+        const aeText = (aeKey && aeMap[aeKey]) ? aeMap[aeKey] : (Object.values(aeMap)[0] || 'Aprendizagem Essencial conforme Escopo-Sequência do Guia Priorizado');
+
+        const blockSkills = Array.from(new Set(block.match(/\b(?:EF\d{2}[A-Z]{2}\d{2}|EM13[A-Z]{3}\d{3})\b/g) || []));
+        const blockDescs = Array.from(new Set(block.match(/\b(?:\dEF-D\d+|EM-D\d+|3EM-D\d+|ENEM\s*C\d+-H\d+)\b/gi) || []));
+
+        const bodyLines = block
+          .split('\n')
+          .slice(1)
+          .map(l => l.trim())
+          .filter(l => l && !/^(?:P[aá]gina|\d+|Escopo|Bimestre|Anos Finais|Anos Iniciais|Ensino M[eé]dio)$/i.test(l));
+
+        const cleanTitle = cur.title.includes(':')
+          ? cur.title
+          : cur.title.replace(/^(Aulas?\s*\d+(?:\s*(?:,|e|&|a|até|-|–|\/)\s*\d+)*)\s*[-–—]?\s*/i, '$1: ');
+        const objectiveText = bodyLines.slice(0, 3).join(' ').slice(0, 320) || `Desenvolver os objetivos previstos na ${cleanTitle}.`;
+        const contentText = bodyLines.slice(3, 6).join(' ').slice(0, 260) || cleanTitle.replace(/^Aulas?\s*\d+[^:]*:\s*/i, '');
+
+        const combinedSkill = [
+          blockDescs[0] || saebDescriptors[i % Math.max(1, saebDescriptors.length)] || '',
+          blockSkills.length > 0 ? `(${blockSkills.join('; ')})` : (skillCodes[0] ? `(${skillCodes[0]})` : '')
+        ].filter(Boolean).join(' ').trim() || 'Conforme Matriz Curricular';
+
+        const priority = (blockDescs.length > 0 || i < 8) ? 'Prioridade 1' : (i < 16 ? 'Prioridade 2' : 'Prioridade 3');
+
+        lessonBlocks.push({
+          dia: '',
+          aula: cleanTitle,
+          ae: aeText,
+          objetivo: objectiveText,
+          conteudo: contentText,
+          habilidade: combinedSkill,
+          prioridade: priority,
+          criticidade: 'Sem dados',
+          acerto: '',
+          decisao: 'Manter',
+          acao: ''
+        });
+      }
+
+      return expandGroupedLessons(lessonBlocks);
+    }
+
+    async function extractAndCrossData() {
+      const pasteArea = document.getElementById('manual-paste-text');
+      const pastedText = pasteArea ? pasteArea.value.trim() : '';
+
+      if ((!cachedPdfPages || cachedPdfPages.length === 0) && !pastedText) {
+        showToast('Importe um arquivo PDF do Guia Priorizado ou cole o texto antes de extrair.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-extract-ai');
+      if (btn) btn.disabled = true;
+
+      try {
+        setProgress(true, 'Localizando a seção Escopo-Sequência do Ano/Série e Bimestre...', 20);
+
+        const gradeTarget = document.getElementById('extract-grade').value;
+        const bimTarget = document.getElementById('extract-bimestre').value;
+        const componente = document.getElementById('meta-componente').value || detectedGuideMeta.componente || 'Componente Curricular';
+        const startVal = document.getElementById('extract-start-page').value;
+        const endVal = document.getElementById('extract-end-page').value;
+        const startPage = startVal ? parseInt(startVal, 10) : null;
+        const endPage = endVal ? parseInt(endVal, 10) : null;
+
+        const sourcePages = cachedPdfPages.length > 0
+          ? cachedPdfPages
+          : [{ pageNum: 1, text: pastedText, lower: pastedText.toLowerCase(), items: [] }];
+
+        const { scopePages, diagPages } = filterTargetPages(sourcePages, gradeTarget, bimTarget, startPage, endPage);
+        const scopeText = scopePages.map(p => `[Página ${p.pageNum}]\n${p.text}`).join('\n\n');
+        const diagText = diagPages.map(p => `[Página ${p.pageNum}]\n${p.text}`).join('\n\n');
+
+        const pageRangeLabel = scopePages.length > 0
+          ? `págs. ${scopePages[0].pageNum} a ${scopePages[scopePages.length - 1].pageNum}`
+          : '';
+
+        setProgress(true, `Lendo Escopo-Sequência (${pageRangeLabel}) e cruzando com matrizes...`, 55);
+
+        // 1. Extração tabular precisa por coordenadas + extração via IA (Gemini)
+        const coordExtracted = parseLessonsFromPdfPages(scopePages, diagPages.length > 0 ? diagPages : sourcePages);
+        let extractedLessons = await callGeminiExtractionAPI(scopeText, diagText, componente, gradeTarget, bimTarget);
+        let usedFallback = false;
+
+        // Se o parser tabular local encontrou mais aulas completas do que a resposta resumida da IA, prioriza o total completo sem perdas
+        if (!extractedLessons || extractedLessons.length === 0 || (coordExtracted.length > extractedLessons.length)) {
+          setProgress(true, 'Consolidando todas as aulas do Escopo-Sequência...', 82);
+          extractedLessons = coordExtracted;
+          usedFallback = true;
+        }
+
+        if (!extractedLessons || extractedLessons.length === 0) {
+          setProgress(false);
+          showToast('Não foram encontradas aulas neste intervalo. Informe a Página Inicial e Final do Escopo-Sequência ou cole o trecho do guia.', 'error');
+          return;
+        }
+
+        lessonsData = extractedLessons;
+
+        // Sincroniza metadados do Card 2 com a seleção atual
+        document.getElementById('meta-turma').value = `${gradeTarget} A`;
+        const metaBimSelect = document.getElementById('meta-bimestre');
+        const optMatch = Array.from(metaBimSelect.options).find(o => normalizeTextSearch(o.value) === normalizeTextSearch(bimTarget));
+        if (optMatch) metaBimSelect.value = optMatch.value;
+
+        updateHeaderMetadata();
+        renderTable();
+
+        setProgress(false);
+        const modeLabel = usedFallback ? `Escopo-Sequência ${pageRangeLabel}` : `IA Gemini • ${pageRangeLabel}`;
+        showToast(`${extractedLessons.length} aulas extraídas para ${gradeTarget} (${bimTarget}) [${modeLabel}]!`, 'success');
+      } catch (err) {
+        console.error('Erro na extração:', err);
+        setProgress(false);
+        showToast('Erro ao processar as aulas do guia: ' + (err.message || 'falha inesperada'), 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // =========================================================================
+    // 8. EXEMPLOS PRONTOS (6º ANO EF E 1ª SÉRIE EM)
+    // =========================================================================
+    function loadSample6Ano() {
+      document.getElementById('meta-componente').value = 'Matemática';
+      document.getElementById('meta-etapa').value = 'Ensino Fundamental - Anos Finais';
+      document.getElementById('meta-turma').value = '6º Ano A';
+      document.getElementById('meta-bimestre').value = '1º bimestre';
+      document.getElementById('extract-grade').value = '6º Ano';
+      document.getElementById('extract-bimestre').value = '1º Bimestre';
+      updateHeaderMetadata();
+
+      lessonsData = [
+        {
+          dia: '2027-02-03',
+          aula: 'Aula 1: Aquecimento: Sistema de numeração decimal',
+          ae: 'AE1 - Compor e decompor números naturais de diferentes ordens, reconhecendo as características do sistema de numeração decimal.',
+          objetivo: 'Reconhecer o sistema de numeração decimal como o que prevaleceu no mundo ocidental; ler e escrever números naturais de 4 ou mais ordens.',
+          conteudo: 'Características do sistema de numeração decimal (base 10, leitura e escrita).',
+          habilidade: '9EF-D24 (EF06MA02)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Em atenção',
+          acerto: 54,
+          decisao: 'Adaptar e ampliar',
+          acao: 'Usar quadro posicional e material manipulável para consolidar leitura de ordens e classes.'
+        },
+        {
+          dia: '2027-02-04',
+          aula: 'Aula 2: Desenvolvimento: Características do sistema de numeração decimal',
+          ae: 'AE1 - Compor e decompor números naturais de diferentes ordens, reconhecendo as características do sistema de numeração decimal.',
+          objetivo: 'Reconhecer valor posicional e função do zero; associar ordens a múltiplos de 10; representar no quadro valor de lugar.',
+          conteudo: 'Valor posicional de um algarismo em número natural de 4+ ordens e papel do zero.',
+          habilidade: '9EF-D24 (EF04MA02 / EF06MA02)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Crítica',
+          acerto: 36,
+          decisao: 'Reorganizar e ampliar',
+          acao: 'Realizar oficina de recomposição sobre valor relativo x absoluto antes de avançar para forma polinomial.'
+        },
+        {
+          dia: '2027-02-05',
+          aula: 'Aula 3: Desenvolvimento: Composição e decomposição de números naturais',
+          ae: 'AE1 - Compor e decompor números naturais de diferentes ordens, reconhecendo as características do sistema de numeração decimal.',
+          objetivo: 'Compor e decompor números de 4+ ordens por adições e multiplicações de múltiplos de 10; ler tabelas de dupla entrada.',
+          conteudo: 'Decomposição em ordens, adições e forma polinomial (×10, ×100, ×1000).',
+          habilidade: '9EF-D24 / 9EF-D36 (EF04MA02; EF06MA32)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Em atenção',
+          acerto: 48,
+          decisao: 'Adaptar e ampliar',
+          acao: 'Incluir 2 questões comentadas da Prova Paulista envolvendo decomposição polinomial e tabelas.'
+        },
+        {
+          dia: '2027-02-10',
+          aula: 'Aula 7: Desenvolvimento: Comparação e ordenação de números naturais',
+          ae: 'AE2 - Comparar e ordenar números naturais de diferentes ordens, utilizando, inclusive, a reta numérica como suporte.',
+          objetivo: 'Localizar e representar números naturais na reta numérica; comparar e ordenar números naturais.',
+          conteudo: 'Localização de números naturais na reta numérica; comparação e ordenação.',
+          habilidade: '9EF-D16 / 9EF-D24 (EF06MA01)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Dominada',
+          acerto: 78,
+          decisao: 'Manter',
+          acao: 'Seguir Material Digital SEDUC-SP com desafio de escalas variadas na reta numérica.'
+        },
+        {
+          dia: '2027-02-12',
+          aula: 'Aula 11: Aquecimento: Adição e subtração com números naturais',
+          ae: 'AE3 - Resolver problemas envolvendo as quatro operações fundamentais com números naturais, por meio de estratégias diversas.',
+          objetivo: 'Reconhecer situações do cotidiano com adição e subtração; efetuar cálculos mentais e algoritmos com números naturais.',
+          conteudo: 'Problemas de adição ou subtração com números naturais de 3 ou mais algarismos.',
+          habilidade: '9EF-D19 / 9EF-D18 (EF06MA03)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Em atenção',
+          acerto: 61,
+          decisao: 'Adaptar e ampliar',
+          acao: 'Trabalhar interpretação de enunciados com ideias de comparar e completar.'
+        }
+      ];
+
+      renderTable();
+      showToast('Exemplo do 6º Ano (Matemática - 1º Bimestre) carregado!', 'success');
+    }
+
+    function loadSampleEM() {
+      document.getElementById('meta-componente').value = 'Matemática';
+      document.getElementById('meta-etapa').value = 'Ensino Médio';
+      document.getElementById('meta-turma').value = '1ª Série A';
+      document.getElementById('meta-bimestre').value = '1º bimestre';
+      document.getElementById('extract-grade').value = '1ª Série';
+      document.getElementById('extract-bimestre').value = '1º Bimestre';
+      updateHeaderMetadata();
+
+      lessonsData = [
+        {
+          dia: '2027-02-03',
+          aula: 'Aula 1: Aquecimento: Conjuntos numéricos e intervalos reais',
+          ae: 'AE1 - Reconhecer e representar subconjuntos dos números reais na reta numérica e por meio de notação de intervalos.',
+          objetivo: 'Identificar números naturais, inteiros, racionais e irracionais; representar intervalos limitados e ilimitados na reta real.',
+          conteudo: 'Conjuntos numéricos e representação de intervalos na reta real (Provão Paulista).',
+          habilidade: '3EM-D14 / ENEM C1-H1 (EM13MAT101)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Crítica',
+          acerto: 38,
+          decisao: 'Reorganizar e ampliar',
+          acao: 'Revisar localização de frações e raízes não exatas na reta real antes de introduzir notação de colchetes.'
+        },
+        {
+          dia: '2027-02-05',
+          aula: 'Aula 2: Desenvolvimento: Operações com intervalos reais',
+          ae: 'AE1 - Reconhecer e representar subconjuntos dos números reais na reta numérica e por meio de notação de intervalos.',
+          objetivo: 'Determinar união, intersecção e diferença entre intervalos reais com apoio geométrico.',
+          conteudo: 'União e intersecção de intervalos numéricos em situações-problema.',
+          habilidade: '3EM-D14 / ENEM C1-H3 (EM13MAT101)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Em atenção',
+          acerto: 52,
+          decisao: 'Adaptar e ampliar',
+          acao: 'Utilizar retas paralelas coloridas para visualizar extremos abertos e fechados.'
+        },
+        {
+          dia: '2027-02-10',
+          aula: 'Aula 5: Desenvolvimento: Noção intuitiva de função e domínio',
+          ae: 'AE2 - Analisar relações de interdependência entre duas grandezas, identificando domínio, contradomínio e imagem.',
+          objetivo: 'Reconhecer lei de formação de uma função a partir de tabelas, gráficos e situações cotidianas.',
+          conteudo: 'Conceito de função, domínio e imagem em contextos aplicados (ENEM / Provão Paulista).',
+          habilidade: '3EM-D19 / ENEM C5-H19 (EM13MAT302)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Em atenção',
+          acerto: 59,
+          decisao: 'Adaptar e ampliar',
+          acao: 'Explorar tarifas de transporte e consumo de energia como modelos funcionais.'
+        },
+        {
+          dia: '2027-02-12',
+          aula: 'Aula 8: Desenvolvimento: Função afim — taxa de variação e gráfico',
+          ae: 'AE3 - Resolver e elaborar problemas que envolvam funções polinomiais do 1º grau em contextos diversos.',
+          objetivo: 'Relacionar os coeficientes angular e linear ao comportamento crescente/decrescente e à intersecção com os eixos.',
+          conteudo: 'Gráfico da função afim, zero da função e taxa de variação constante.',
+          habilidade: '3EM-D20 / ENEM C5-H21 (EM13MAT302)',
+          prioridade: 'Prioridade 1',
+          criticidade: 'Dominada',
+          acerto: 74,
+          decisao: 'Manter',
+          acao: 'Aplicar roteiro do Material Digital com resolução de questões do ENEM.'
+        }
+      ];
+
+      renderTable();
+      showToast('Exemplo da 1ª Série do Ensino Médio (Matemática - 1º Bimestre) carregado!', 'success');
+    }
+
+    // =========================================================================
+    // 9. EXPORTAÇÃO FIEL PARA EXCEL (.XLSX) — ESPELHO MODELO FUNCIONAL 2027
+    // =========================================================================
+    async function exportToExcel() {
+      if (typeof ExcelJS === 'undefined') {
+        showToast('Biblioteca ExcelJS ainda está carregando. Tente novamente em alguns segundos.', 'error');
+        return;
+      }
+
+      try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Gerador Universal SEDUC-SP 2027';
+        workbook.created = new Date();
+
+        const bimestreRaw = document.getElementById('meta-bimestre').value || '1º bimestre';
+        const bimestreCap = bimestreRaw.replace('bimestre', 'Bimestre');
+        const sheetName = `Plano Bimestral - ${bimestreCap}`.slice(0, 31);
+        const ws = workbook.addWorksheet(sheetName, {
+          views: [{ state: 'frozen', xSplit: 0, ySplit: 6, activeCell: 'B7' }],
+          pageSetup: {
+            paperSize: 9, // A4
+            orientation: 'landscape',
+            fitToPage: true,
+            fitToWidth: 1,
+            fitToHeight: 0,
+            margins: { left: 0.35, right: 0.35, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 }
+          }
+        });
+
+        // Larguras exatas das colunas A..L do Modelo Funcional 2027.xlsx
+        const colWidths = [14, 13.5, 24, 36, 36, 28, 23, 18, 17, 14, 24, 48];
+        ws.columns = colWidths.map((w, idx) => ({
+          key: String.fromCharCode(65 + idx),
+          width: w
+        }));
+
+        // Calcula altura dinâmica da linha com base na quebra de texto real de cada célula
+        function estimateAutoRowHeight(cellsWithWidths, minHeight = 36, lineHeight = 15.5, padding = 12) {
+          let maxLines = 1;
+          for (const { text, width } of cellsWithWidths) {
+            if (!text) continue;
+            const str = String(text);
+            const effectiveChars = Math.max(8, Math.floor((width || 20) * 0.88));
+            const paragraphs = str.split(/\r?\n/);
+            let totalLines = 0;
+            for (const p of paragraphs) {
+              totalLines += Math.max(1, Math.ceil(p.length / effectiveChars));
+            }
+            if (totalLines > maxLines) maxLines = totalLines;
+          }
+          return Math.max(minHeight, maxLines * lineHeight + padding);
+        }
+
+        const thinBorder = {
+          top: { style: 'thin', color: { argb: 'FFD0D5DD' } },
+          left: { style: 'thin', color: { argb: 'FFD0D5DD' } },
+          bottom: { style: 'thin', color: { argb: 'FFD0D5DD' } },
+          right: { style: 'thin', color: { argb: 'FFD0D5DD' } }
+        };
+
+        // Linha 1: Título Principal
+        ws.mergeCells('A1:L1');
+        const r1 = ws.getCell('A1');
+        r1.value = `PLANO BIMESTRAL - ${bimestreRaw.toUpperCase()}`;
+        r1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+        r1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF293252' } };
+        r1.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+        ws.getRow(1).height = 32;
+
+        // Linha 2: Professor(a) | Componente | Série/Ano/Turma
+        ws.mergeCells('B2:D2');
+        ws.mergeCells('F2:G2');
+        ws.mergeCells('I2:L2');
+        ws.getRow(2).height = 24;
+
+        const metaLabels2 = [
+          { cell: 'A2', val: 'Professor(a):', bold: true, bg: 'FFF3F4F8', align: 'right' },
+          { cell: 'B2', val: document.getElementById('meta-professor').value || '', bold: false, bg: 'FFFFFFFF', align: 'left' },
+          { cell: 'E2', val: 'Componente:', bold: true, bg: 'FFF3F4F8', align: 'right' },
+          { cell: 'F2', val: document.getElementById('meta-componente').value || '', bold: false, bg: 'FFFFFFFF', align: 'left' },
+          { cell: 'H2', val: 'Série/Ano/Turma:', bold: true, bg: 'FFF3F4F8', align: 'right' },
+          { cell: 'I2', val: document.getElementById('meta-turma').value || '', bold: false, bg: 'FFFFFFFF', align: 'left' }
+        ];
+        metaLabels2.forEach(item => {
+          const c = ws.getCell(item.cell);
+          c.value = item.val;
+          c.font = { name: 'Calibri', size: 11, bold: item.bold, color: { argb: item.bold ? 'FF293252' : 'FF1F2433' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: item.bg } };
+          c.alignment = { horizontal: item.align, vertical: 'center', wrapText: true };
+        });
+
+        // Linha 3: Bimestre | Total de aulas | Etapa
+        ws.mergeCells('B3:D3');
+        ws.mergeCells('F3:G3');
+        ws.mergeCells('I3:L3');
+        ws.getRow(3).height = 24;
+
+        const metaLabels3 = [
+          { cell: 'A3', val: 'Bimestre:', bold: true, bg: 'FFF3F4F8', align: 'right' },
+          { cell: 'B3', val: bimestreRaw, bold: false, bg: 'FFFFFFFF', align: 'left' },
+          { cell: 'E3', val: 'Total de aulas:', bold: true, bg: 'FFF3F4F8', align: 'right' },
+          { cell: 'F3', val: Number(document.getElementById('meta-total-aulas').value) || lessonsData.length, bold: false, bg: 'FFFFFFFF', align: 'left' },
+          { cell: 'H3', val: 'Etapa:', bold: true, bg: 'FFF3F4F8', align: 'right' },
+          { cell: 'I3', val: document.getElementById('meta-etapa').value || '', bold: false, bg: 'FFFFFFFF', align: 'left' }
+        ];
+        metaLabels3.forEach(item => {
+          const c = ws.getCell(item.cell);
+          c.value = item.val;
+          c.font = { name: 'Calibri', size: 11, bold: item.bold, color: { argb: item.bold ? 'FF293252' : 'FF1F2433' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: item.bg } };
+          c.alignment = { horizontal: item.align, vertical: 'center', wrapText: true };
+        });
+
+        for (let r = 2; r <= 3; r++) {
+          for (let col = 1; col <= 12; col++) {
+            ws.getCell(r, col).border = thinBorder;
+          }
+        }
+
+        // Linha 4: Espaçador
+        ws.mergeCells('A4:L4');
+        ws.getRow(4).height = 8;
+
+        // Linha 5: Blocos Temáticos
+        ws.mergeCells('A5:G5');
+        ws.mergeCells('H5:J5');
+        ws.mergeCells('K5:L5');
+        ws.getRow(5).height = 26;
+
+        const blocks5 = [
+          { cell: 'A5', text: 'Guia do Currículo Priorizado', bg: 'FF57C2A2' },
+          { cell: 'H5', text: 'Painel de diagnóstico', bg: 'FFFCC553' },
+          { cell: 'K5', text: 'Decisão pedagógica', bg: 'FFFB8854' }
+        ];
+        blocks5.forEach(b => {
+          const c = ws.getCell(b.cell);
+          c.value = b.text;
+          c.font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FF1F2433' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: b.bg } };
+          c.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+        });
+        for (let col = 1; col <= 12; col++) ws.getCell(5, col).border = thinBorder;
+
+        // Linha 6: Subcabeçalhos
+        ws.getRow(6).height = 36;
+        const headers6 = [
+          '1. Semana',
+          '2. Dia',
+          '3. Aula',
+          '4. Aprendizagem essencial',
+          '5. Objetivo da aula',
+          '6. Conteúdo da Prova Paulista',
+          '7. Habilidade SAEB/ENEM',
+          '1. Prioridade no mapa',
+          '2. Criticidade da turma',
+          '3. % de acerto da turma',
+          '1. Manter, adaptar/ampliar ou reorganizar',
+          '2. O que será feito nesta aula?'
+        ];
+        headers6.forEach((hText, i) => {
+          const colIdx = i + 1;
+          const cell = ws.getCell(6, colIdx);
+          const bg = colIdx <= 7 ? 'FFDEF3EC' : (colIdx <= 10 ? 'FFFEF3D6' : 'FFFEE7DB');
+          cell.value = hText;
+          cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF1F2433' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+          cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+          cell.border = thinBorder;
+        });
+
+        // Linhas de Aulas (mínimo 33 linhas de dados como no modelo original)
+        const totalDataRows = Math.max(33, lessonsData.length);
+        for (let i = 0; i < totalDataRows; i++) {
+          const rowNum = 7 + i;
+          const rowObj = ws.getRow(rowNum);
+          const item = lessonsData[i] || null;
+
+          // Calcula altura ideal da linha para que nenhum texto fique cortado no Excel
+          rowObj.height = item
+            ? estimateAutoRowHeight([
+                { text: item.aula, width: colWidths[2] },
+                { text: item.ae, width: colWidths[3] },
+                { text: item.objetivo, width: colWidths[4] },
+                { text: item.conteudo, width: colWidths[5] },
+                { text: item.habilidade, width: colWidths[6] },
+                { text: item.acao, width: colWidths[11] }
+              ], 44, 15.5, 14)
+            : 34;
+
+          // Coluna A: Fórmula oficial de Semana
+          const cellA = ws.getCell(rowNum, 1);
+          cellA.value = {
+            formula: `IF(B${rowNum}="","",TEXT(B${rowNum}-WEEKDAY(B${rowNum},2)+1,"dd/mm")&" a "&TEXT(B${rowNum}-WEEKDAY(B${rowNum},2)+7,"dd/mm"))`,
+            result: item && item.dia ? computeWeekRange(item.dia) : ''
+          };
+          cellA.font = { name: 'Calibri', size: 10, color: { argb: 'FF5B6275' } };
+          cellA.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF6F7FA' } };
+          cellA.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+          // Coluna B: Data
+          const cellB = ws.getCell(rowNum, 2);
+          if (item && item.dia) {
+            const [y, m, d] = item.dia.split('-').map(Number);
+            cellB.value = new Date(Date.UTC(y, m - 1, d));
+            cellB.numFmt = 'dd/mm/yyyy';
+          }
+          cellB.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+          // Colunas C a L
+          const valuesMap = item
+            ? [item.aula, item.ae, item.objetivo, item.conteudo, item.habilidade, item.prioridade, item.criticidade, item.acerto !== '' && item.acerto !== null ? Number(item.acerto) / 100 : null, item.decisao, item.acao]
+            : [null, null, null, null, null, null, null, null, null, null];
+
+          valuesMap.forEach((val, offset) => {
+            const colIdx = 3 + offset;
+            const c = ws.getCell(rowNum, colIdx);
+            if (val !== null && val !== undefined && val !== '') {
+              c.value = val;
+            }
+            if (colIdx === 10) {
+              c.numFmt = '0%';
+            }
+            const centerCols = [8, 9, 10, 11];
+            c.alignment = {
+              horizontal: centerCols.includes(colIdx) ? 'center' : 'left',
+              vertical: 'middle',
+              wrapText: true
+            };
+            c.font = { name: 'Calibri', size: 11, color: { argb: 'FF1F2433' } };
+          });
+
+          // Listas suspensas (Validação de Dados idêntica ao Modelo Funcional 2027.xlsx)
+          ws.getCell(rowNum, 8).dataValidation = {
+            type: 'list',
+            allowBlank: true,
+            formulae: ['"Prioridade 1,Prioridade 2,Prioridade 3,Não identificada"']
+          };
+          ws.getCell(rowNum, 9).dataValidation = {
+            type: 'list',
+            allowBlank: true,
+            formulae: ['"Crítica,Em atenção,Dominada,Sem dados"']
+          };
+          ws.getCell(rowNum, 11).dataValidation = {
+            type: 'list',
+            allowBlank: true,
+            formulae: ['"Manter,Adaptar e ampliar,Reorganizar e ampliar"']
+          };
+
+          for (let col = 1; col <= 12; col++) {
+            ws.getCell(rowNum, col).border = thinBorder;
+          }
+        }
+
+        // Linha Final: Instrumentos avaliativos do bimestre
+        const footerRowNum = 7 + totalDataRows;
+        const instrumentosText = document.getElementById('meta-instrumentos').value || '';
+        const mergedFooterWidth = colWidths.slice(1).reduce((acc, w) => acc + w, 0);
+        ws.getRow(footerRowNum).height = estimateAutoRowHeight([
+          { text: instrumentosText, width: mergedFooterWidth }
+        ], 64, 16, 18);
+        ws.mergeCells(`B${footerRowNum}:L${footerRowNum}`);
+
+        const fCellA = ws.getCell(footerRowNum, 1);
+        fCellA.value = 'Instrumentos avaliativos do bimestre';
+        fCellA.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+        fCellA.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF293252' } };
+        fCellA.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+        const fCellB = ws.getCell(footerRowNum, 2);
+        fCellB.value = document.getElementById('meta-instrumentos').value || '';
+        fCellB.font = { name: 'Calibri', size: 11, color: { argb: 'FF1F2433' } };
+        fCellB.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+        fCellB.alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
+
+        for (let col = 1; col <= 12; col++) {
+          ws.getCell(footerRowNum, col).border = thinBorder;
+        }
+
+        // Download do arquivo .xlsx
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const compSlug = (document.getElementById('meta-componente').value || 'Componente').trim().replace(/\s+/g, '_');
+        const turmaSlug = (document.getElementById('meta-turma').value || 'Turma').trim().replace(/\s+/g, '_');
+        a.href = url;
+        a.download = `Plano_Bimestral_2027_${compSlug}_${turmaSlug}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        showToast('Planilha .xlsx gerada e baixada com sucesso!', 'success');
+      } catch (err) {
+        console.error('Erro ao exportar Excel:', err);
+        showToast('Erro ao gerar o arquivo Excel: ' + err.message, 'error');
+      }
+    }
+
+    // Inicializa listeners de drag-and-drop e carrega tabela inicial
+    document.addEventListener('DOMContentLoaded', () => {
+      initPdfDropzone();
+      if (lessonsData.length === 0) {
+        addLessonRow();
+      }
+    });
+  </script>
+</body>
+</html>
